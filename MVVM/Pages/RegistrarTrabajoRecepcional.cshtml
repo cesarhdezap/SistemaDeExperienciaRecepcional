@@ -1,0 +1,295 @@
+﻿@page
+@model MVVM.Pages.RegistrarTrabajoRecepcionalModel
+
+<h1>Registrar trabajo recepcional</h1>
+
+<form id="formRegistrarTrabajoRecepcional" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger" />
+
+    <div id="identificadores">
+        <div class="form-group">
+            <div class="form-group">
+                <label for="inputNombreDeTrabajoRecepcional">Nombre del trabajo recepcional</label>
+                <input type="text" asp-for="TrabajoRecepcional.Nombre" class="form-control" id="inputNombreDeTrabajoRecepcional" placeholder="Escriba el nombre">
+                <span asp-validation-for="TrabajoRecepcional.Nombre" class="text-danger" />
+            </div>
+
+            <div class="form-group text-center">
+                <label class="form-text">Modalidad</label>
+                <select class="form-control" asp-for="@Model.TrabajoRecepcional.Modalidad" asp-items="Html.GetEnumSelectList<Modalidades>()">
+                    <option selected="selected" value="">Seleccione una opción</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="inputArchivoDeAnteproyecto">Subir archivo de anteproyecto</label>
+                <input type="file" asp-for="TrabajoRecepcional.Anteproyecto" class="form-control" id="inputArchivoDeAnteproyecto">
+                <span asp-validation-for="TrabajoRecepcional.Anteproyecto" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="clearfix">
+            <input class="btn btn-primary float-right" type="button" id="btnSeleccionarAlumnos" value="Seleccionar alumnos" />
+        </div>
+    </div>
+
+    <div id="seleccionarAlumnos">
+        <h2 class="form-text">Seleccione un alumno</h2>
+        <div class="form-group">
+            <input id="btnBuscarAlumnos" class="form-control" type="search" asp-for="TerminoDeBusqueda" placeholder="Buscar" />
+            <input id="inputSubmitBusqueda" hidden type="submit" formmethod="get" />
+
+            @*Busqueda validacion*@
+            <div class="table-responsive">
+                <table id="tblAlumnos" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>@Html.DisplayNameFor(model => model.AlumnosDelMaestro[0].Nombre) </th>
+                            <th>Matrícula </th>
+                            <th>Correo electrónico</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var alumno in Model.AlumnosDelMaestro) //can be null
+                        {
+                            <tr>
+                                <td class="tdAlumnoID" hidden>@alumno.ID</td>
+                                <td>@alumno.Nombre</td>
+                                <td>@alumno.Matricula</td>
+                                <td>@alumno.CorreoElectronico</td>
+                            </tr>
+                        }
+                    </tbody>
+
+                </table>
+            </div>
+            <input id="inputAlumnoID" hidden asp-for="IDAlumnoSeleccionado" />
+            <div class="clearfix">
+                <input class="btn btn-secondary float-left" id="btnRegresarIdentificadores" type="button" value="Regresar" />
+                <input class="btn btn-primary float-right" type="button" id="btnSeleccionarTipoDeProyecto" value="Seleccionar tipo de proyecto" />
+            </div>
+        </div>
+    </div>
+
+    <div id="seleccionarTipoDeProyecto">
+        <div class="form-group">
+            <label class="form-text">Tipo de proyecto al que pertenece</label>
+            <select id="selectTipoDeProyecto" class="form-control">
+                <option class="text-secondary" selected>Tipo de proyecto</option>
+                <option value="vinculacion">Vinculación</option>
+                <option value="pladeafei">PLADEAFEI</option>
+                <option value="proyectoDeInvestigacion">Proyecto de investigación</option>
+            </select>
+            @*Validacion del combobox*@
+        </div>
+
+        <div class="form-group">
+            <label class="form-text">Seleccione el proyecto de investigación</label>
+            <select class="form-control">
+                <option selected>Proyecto</option>
+                <option value="1">Proyecto de investigación 1</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-text">Selecciona una LGAC del proyecto de investigación</label>
+            <select class="form-control">
+                <option selected>LGAC</option>
+                <option value="1">LGAC 1</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-text">Línea de investigación</label>
+            <input type="text" asp-for="TrabajoRecepcional.LineaDeInvestigacion" class="form-control" id="inputLineaDeInvestigacion">
+        </div>
+        <div class="clearfix">
+            <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarAlumno" type="button" value="Regresar" />
+            <input class="btn btn-primary float-right" type="button" id="btnSeleccionarOpcionDeSinodal" value="Seleccionar opcion de sinodal" />
+        </div>
+
+    </div>
+
+    <div id="seleccionarOpcionDeSinodal">
+        <h2 class="form-text">Seleccione una opción</h2>
+        <div class="form-group text-center p-4">
+            <input class="btn btn-primary pt-4 pb-4 pr-5 pl-5" type="button" value="Registrar nuevo sinodal">
+            <input class="btn btn-primary pt-4 pb-4 pr-5 pl-5" type="button" id="btnBuscarSinodal" value="Buscar sinodal" />
+        </div>
+        <div class="clearfix">
+            <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarTipoDeProyecto" type="button" value="Regresar" />
+        </div>
+    </div>
+
+    <div id="buscarSinodal">
+        <h2 class="form-text">Seleccione un sinodal</h2>
+        <div class="form-group">
+            <input class="form-control" type="search" placeholder="Buscar" />
+
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Organización</th>
+                        <th>Correo electrónico</th>
+                        <th>Incluido</th>
+                        <th>Tipo</th>
+                    </tr>
+                    @foreach (var integrante in Model.Integrantes)
+                    {
+                        <tr>
+                            <td>@integrante.Nombre</td>
+                            <td>N/A</td>
+                            <td>N/A</td>
+                            <td>X</td>
+                            <td>N/A</td>
+                        </tr>
+                    }
+                    @foreach (var sinodal in Model.Sinodales)
+                    {
+                        <tr>
+                            <td>@sinodal.Nombre</td>
+                            <td>@sinodal.Organizacion</td>
+                            <td>@sinodal.CorreoElectronico</td>
+                            <td>X</td>
+                            <td>N/A</td>
+                        </tr>
+                    }
+                </table>
+            </div>
+
+            <div class="float-right">
+                <button class="btn btn-danger">Eliminar sinodal</button>
+                <button class="btn btn-success">Añadir sinodal</button>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-text">Seleccione el tipo de sinodal</label>
+            <select class="form-control">
+                <option selected>Tipo de sinodal</option>
+                <option value="1">Director</option>
+                <option value="2">Codirector</option>
+                <option value="3">Sinodal</option>
+            </select>
+        </div>
+
+        <div class="clearfix">
+            <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
+            <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
+        </div>
+    </div>
+
+    
+</form>
+
+<div class="d-flex justify-content-center" id="contenedorDePasoActual">
+    <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual1"></div>
+    <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual2"></div>
+    <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual3"></div>
+    <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual4"></div>
+    <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual5"></div>
+</div>
+
+@section scripts {
+    <script id="clickEvents">
+        //Disable all enter defaults
+        $("input").on('keypress', function (e) {
+            if (e.which == 13) {
+                event.preventDefault();
+            }
+        });
+        //Asign submit its click since it was removed on default
+        $('#btnRegistrarTrabajoRecepcional').on('click', function (e) {
+            $("#btnRegistrarTrabajoRecepcional").click();
+        });
+        //Asign btnBuscarAlumnos click on enter
+        $("#btnBuscarAlumnos").on('keypress', function (e) {
+            if (e.which == 13) {
+                $("#inputSubmitBusqueda").click();
+            }
+        });
+
+        $('#tblAlumnos > tbody > tr').on('click', '', function (e) {
+            let target = e.currentTarget;
+            let idAlumno = $(target).children('.tdAlumnoID').text();
+            let highlightClass = 'bg-primary bg-gradient text-light';
+            $("#inputAlumnoID").text(idAlumno);
+            $('#tblAlumnos > tbody > tr').removeClass(highlightClass)
+            $(target).addClass(highlightClass);
+        });
+
+        $('#selectTipoDeProyecto').on('change', function (e) {
+            var optionSelected = $("option:selected", this);
+            var valueSelected = this.value;
+            if (valueSelected == 'vinculacion') {
+
+            }
+            else if (valueSelected == 'pladeafei') {
+
+            }
+            else if (valueSelected == 'proyectoDeInvestigacion') {
+
+            }
+            alert(valueSelected);
+
+        });
+    </script>
+
+    <script id="stepsScript">
+        $('#formRegistrarTrabajoRecepcional').children().hide();
+        $('#identificadores').show();
+        $('#pasoActual1').addClass('bg-primary').removeClass('bg-secondary');
+
+        $("#btnSeleccionarAlumnos").on('click', function (e) {
+            $('#identificadores').hide();
+            $('#seleccionarAlumnos').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual2').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnSeleccionarTipoDeProyecto").on('click', function (e) {
+            $('#seleccionarAlumnos').hide();
+            $('#seleccionarTipoDeProyecto').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual3').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnSeleccionarOpcionDeSinodal").on('click', function (e) {
+            $('#seleccionarTipoDeProyecto').hide();
+            $('#seleccionarOpcionDeSinodal').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual4').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnBuscarSinodal").on('click', function (e) {
+            $('#seleccionarOpcionDeSinodal').hide();
+            $('#buscarSinodal').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual5').addClass('bg-primary').removeClass('bg-secondary');
+        }); 
+
+        $("#btnRegresarIdentificadores").on('click', function (e) {
+            $('#seleccionarAlumnos').hide();
+            $('#identificadores').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual1').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnRegresarSeleccionarAlumno").on('click', function (e) {
+            $('#seleccionarTipoDeProyecto').hide();
+            $('#seleccionarAlumnos').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual2').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnRegresarSeleccionarTipoDeProyecto").on('click', function (e) {
+            $('#seleccionarOpcionDeSinodal').hide();
+            $('#seleccionarTipoDeProyecto').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual3').addClass('bg-primary').removeClass('bg-secondary');
+        });
+        $("#btnRegresarSeleccionarOpcionSinodal").on('click', function (e) {
+            $('#buscarSinodal').hide();
+            $('#seleccionarOpcionDeSinodal').show();
+            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
+            $('#pasoActual4').addClass('bg-primary').removeClass('bg-secondary');
+        });
+
+
+    </script>
+}
