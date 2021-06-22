@@ -18,6 +18,30 @@ namespace MVVM.Models
             var alumno = context.Alumnos.FirstOrDefault(alumno => alumno.ID == idAlumno);
             return alumno;
         }
+
+        /// <summary>
+        /// Busca alumnos por nombre o matrícula
+        /// </summary>
+        /// <param name="cadenaDeBusqueda"></param>
+        /// <param name="context"></param>
+        /// <returns><see cref="List{Alumno}"/> Con los alumnos encontrados o vacio si no encontro ninguno</returns>
+        public List<Alumno> BuscarAlumno(string cadenaDeBusqueda, ApplicationDbContext context)
+        {
+            List<Alumno> alumnos = new List<Alumno>();
+            cadenaDeBusqueda.Trim();
+            if (!string.IsNullOrEmpty(cadenaDeBusqueda))
+            {
+                alumnos = context.Alumnos.Where(alumno => alumno.Nombre.Contains(cadenaDeBusqueda) || alumno.Matricula.Contains(cadenaDeBusqueda)).ToList();
+            }
+
+            return alumnos;
+        }
+
+        public List<Alumno> ObtenerTodos(ApplicationDbContext context)
+        {
+            List<Alumno> alumnos = context.Alumnos.ToList();
+            return alumnos;
+        }
     }
 
     

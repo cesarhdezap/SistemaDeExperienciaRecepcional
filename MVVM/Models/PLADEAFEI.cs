@@ -1,4 +1,5 @@
-﻿using MVVM.Models.ClasesAbstractas;
+﻿using MVVM.Data;
+using MVVM.Models.ClasesAbstractas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,11 @@ namespace MVVM.Models
         public int ArchivoPLADEA { get; set; } // File
         public string ObjetivoGeneral { get; set; }
         public string Periodo { get; set; }
+        public List<PLADEAFEI> ObtenerTodos(ApplicationDbContext context)
+        {
+            List<PLADEAFEI> pladeas = context.PLADEAFEIs.ToList();
+            return pladeas;
+        }
 
     }
 }

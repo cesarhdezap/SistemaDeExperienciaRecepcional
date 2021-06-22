@@ -1,4 +1,5 @@
-﻿using MVVM.Models.ClasesAbstractas;
+﻿using MVVM.Data;
+using MVVM.Models.ClasesAbstractas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +12,10 @@ namespace MVVM.Models
         public DateTime FechaDeInicio { get; set; }
         public string Nombre { get; set; }
         public ICollection<TrabajoRecepcional> TrabajoRecepcionales { get; set; }
+        public List<ProyectoDeInvestigacion> ObtenerTodos(ApplicationDbContext context)
+        {
+            List<ProyectoDeInvestigacion> proyectos = context.ProyectoDeInvestigaciones.ToList();
+            return proyectos;
+        }
     }
 }

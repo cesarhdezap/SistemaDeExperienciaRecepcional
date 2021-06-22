@@ -32,6 +32,7 @@ namespace MVVM.Data
                 context.SinodalesDelTrabajo.AddRange(sinodales);
                 context.SaveChanges();
             }
+            
 
             if (!context.Integrantes.Any())
             {
@@ -45,6 +46,52 @@ namespace MVVM.Data
                 context.SaveChanges();
             }
 
+            if (!context.ProyectoDeInvestigaciones.Any())
+            {
+                var proyectos = new ProyectoDeInvestigacion[]
+                {
+                    new ProyectoDeInvestigacion() {FechaDeInicio = System.DateTime.Now, Nombre = "Desarrollo de Software con una Arquitectura de Microservicios"},
+                    new ProyectoDeInvestigacion() {FechaDeInicio = System.DateTime.Now, Nombre = "Contribución del Perfil Psico-Endrocrinológico al Diagnóstico de la Mujer al Diagnóstico Serológico y Radiológico temprano del Carcinoma Duetal de la Mama"},
+                    new ProyectoDeInvestigacion() {FechaDeInicio = System.DateTime.Now, Nombre = "Ninguno"}
+                };
+                context.ProyectoDeInvestigaciones.AddRange(proyectos);
+                context.SaveChanges();
+            }
+
+            if (!context.PLADEAFEIs.Any())
+            {
+                var pladeas = new PLADEAFEI[]
+                {
+                    new PLADEAFEI() {Accion = "3. Contar con programas educativos reconocidos por su calidad", ObjetivoGeneral = "OG: 3", Periodo = "FEB 21 - JUN 21"},
+                    new PLADEAFEI() {Accion = "4. Investigación, innovación y desarrollo tecnológico", ObjetivoGeneral = "OG: 4", Periodo = "FEB 21 - JUN 21"},
+                };
+                context.PLADEAFEIs.AddRange(pladeas);
+                context.SaveChanges();
+            }
+
+            if (!context.Vinculaciones.Any())
+            {
+                var vinculaciones = new Vinculacion[]
+                {
+                    new Vinculacion() {FechaDeInicioDeConvenio = new System.DateTime(2016,1, 26), OrganizacionVinculada = "Laboratorio de Mamíferos Marinos (LabMMar, IIB-ICIMAP)", CopiaConvenio = 0},
+                    new Vinculacion() {FechaDeInicioDeConvenio = new System.DateTime(2016,1, 26), OrganizacionVinculada = "Instituto de Ciencias Marinas y Pesquerías (ICIMAP)", CopiaConvenio = 0},
+                };
+                context.Vinculaciones.AddRange(vinculaciones);
+                context.SaveChanges();
+            }
+
+            if (!context.LGACs.Any())
+            {
+                var lgacs = new LGAC[]
+                {
+                    new LGAC() {Nombre = "Tecnologías de software", Descripcion = "LGAC de TS"},
+                    new LGAC() {Nombre = "Gestión, Modelado y Desarrollo de Software", Descripcion = "LGAC de GMDS"},
+                    new LGAC() {Nombre = "Instituto de Ciencias Marinas y Pesquerías", Descripcion = "LGAC de ICMP"},
+                    new LGAC() {Nombre = "Instituto de Investigaciones Biológicas", Descripcion = "LGAC de IIB"},
+                };
+                context.LGACs.AddRange(lgacs);
+                context.SaveChanges();
+            }
 
         }
 

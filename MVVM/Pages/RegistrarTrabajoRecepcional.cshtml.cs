@@ -16,49 +16,93 @@ namespace MVVM.Pages
         public List<Alumno> AlumnosDelMaestro { get; set; }
         public List<SinodalDelTrabajo> Sinodales { get; set; }
         public List<Integrante> Integrantes { get; set; }
+        public List<LGAC> LGACs { get; set; }
+
+
         [BindProperty]
         public int IDAlumnoSeleccionado { get; set; }
         [BindProperty]
         public TrabajoRecepcional TrabajoRecepcional { get; set; }
-        [BindProperty(SupportsGet = true)]
-        public string TerminoDeBusqueda { get; set; }
-
-        [BindProperty(SupportsGet = true)]
-        public bool GuardadoExitoso { get; set; }
 
 
         public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext)
         {
             DbContext = applicationDbContext;
 
-            var alumno = new Alumno();
-            AlumnosDelMaestro = new List<Alumno>() { alumno.CargarPorId(1, DbContext), alumno.CargarPorId(2, DbContext), alumno.CargarPorId(3, DbContext) };
-
-            if (!string.IsNullOrEmpty(TerminoDeBusqueda))
-            {
-                TerminoDeBusqueda.Trim();
-                if (!string.IsNullOrEmpty(TerminoDeBusqueda))
-                {
-                    TerminoDeBusqueda = TerminoDeBusqueda.ToLower();
-                    AlumnosDelMaestro = AlumnosDelMaestro.Where(alumno => alumno.Nombre.ToLower().Contains(TerminoDeBusqueda) || alumno.Matricula.ToLower().Contains(TerminoDeBusqueda)).ToList();
-                }
-            }
-
+            AlumnosDelMaestro = new List<Alumno>();
             Integrantes = new List<Integrante>();
             Sinodales = new List<SinodalDelTrabajo>();
-            var sinodales = new SinodalDelTrabajo();
-            var integrantes = new Integrante();
-            Integrantes.AddRange(integrantes.ObtenerTodos(DbContext));
-            Sinodales.AddRange(sinodales.ObtenerTodos(DbContext));
+            LGACs = new List<LGAC>();
         }
 
         public void OnGet()
         {
-            
+            var alumno = new Alumno();
+            AlumnosDelMaestro.AddRange(new Alumno[] { alumno.CargarPorId(1, DbContext), alumno.CargarPorId(2, DbContext), alumno.CargarPorId(3, DbContext) });
+
+            var sinodales = new SinodalDelTrabajo();
+            var integrantes = new Integrante();
+            Integrantes.AddRange(integrantes.ObtenerTodos(DbContext));
+            Sinodales.AddRange(sinodales.ObtenerTodos(DbContext));
+
+            var lgac = new LGAC();
+            LGACs.AddRange(lgac.ObtenerTodos(DbContext));
+            //cachar todas las peticiones y si son null ponerlas empty en el modelo
         }
+
+        public IActionResult OnGetAlumnos(string cadenaDeBusqueda)
+        {
+            //validar paginacion, cuando existan muchos alumnos
+            //validar que get alumnos solo cargue los alumnos del maestro
+            //hacer pruebas de rendimiento para ver si hace falta paginacion
+            var alumno = new Alumno();
+            if (!string.IsNullOrEmpty(cadenaDeBusqueda))
+            {
+                var alumnos = alumno.BuscarAlumno(cadenaDeBusqueda, DbContext);
+                if (alumnos.Count > 0)
+                {
+                    return new OkObjectResult(alumnos);
+                }
+                else
+                {
+                    return NotFound("No se encontro la cadena " + cadenaDeBusqueda);
+                }
+            }
+            else
+            {
+                var alumnos = alumno.ObtenerTodos(DbContext);
+                return new OkObjectResult(alumnos);
+            }
+        }
+
+        public IActionResult OnGetVinculaciones()
+        {
+            var vinculacion = new Vinculacion();
+            var vinculaciones = vinculacion.ObtenerTodos(DbContext);
+            return new OkObjectResult(vinculaciones);
+        }
+
+        public IActionResult OnGetPladeasfei()
+        {
+            var pladeafei = new PLADEAFEI();
+            var pladeasfei = pladeafei.ObtenerTodos(DbContext);
+            return new OkObjectResult(pladeasfei);
+        }
+
+        public IActionResult OnGetProyectosDeInvestigacion()
+        {
+            var proyectoDeInvestigacion = new ProyectoDeInvestigacion();
+            var proyectosDeInvestigacion = proyectoDeInvestigacion.ObtenerTodos(DbContext);
+            return new OkObjectResult(proyectosDeInvestigacion);
+        }
+
+
+
 
         public void OnPost()
         {
+            //set fecha de inicio
+            //set estado del proyecto
             //if(ModelState.IsValid)
             //{
             //    GuardadoExitoso = true;
@@ -69,17 +113,6 @@ namespace MVVM.Pages
             //    return RedirectToPage("/Index");
             //}
         }
-    }
-
-    public enum PasosRegistrarTrabajoRecepcional
-    {
-        Identificadores,
-        SeleccionarAlumnos,
-        SeleccionarTipoDeProyecto,
-        SeleccionarProyecto,
-        LineaDeInvestigacion,
-        SeleccionarOpcionDeSinodal,
-        BuscarSinodal
     }
 
     public enum Modalidades
