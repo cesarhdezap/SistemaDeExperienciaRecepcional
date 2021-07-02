@@ -15,6 +15,7 @@ namespace MVVM.Models
 
         public Alumno CargarPorId(int idAlumno, ApplicationDbContext context)
         {
+            // Microsoft.Data.SqlClient.SqlException cuando no existe
             var alumno = context.Alumnos.FirstOrDefault(alumno => alumno.ID == idAlumno);
             return alumno;
         }

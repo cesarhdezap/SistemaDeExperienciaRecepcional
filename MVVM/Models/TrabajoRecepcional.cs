@@ -25,9 +25,16 @@ namespace MVVM.Models
         public ICollection<Alumno> Alumnos { get; set; }
         [Required(ErrorMessage = "Debe seleccionar al menos el director del trabajo")]
         public ICollection<Direccion> Direcciones { get; set; }
+        
         public TipoDeProyecto TipoDeProyecto { get; set; }
         [Required(ErrorMessage = "Debe seleccionar al menos una LGAC")]
         public ICollection<LGAC> LGACs { get; set; }
+
+        public TrabajoRecepcional()
+        {
+            //Esto es para evitar problemas donde asp net core crea el objeto y no puede crear TipoDeProyecto por que es abstracto
+            TipoDeProyecto = new ProyectoDeInvestigacion();
+        }
 
         public void Guardar()
         {

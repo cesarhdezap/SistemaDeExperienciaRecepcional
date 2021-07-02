@@ -23,6 +23,10 @@ namespace MVVM.Pages
         public int IDAlumnoSeleccionado { get; set; }
         [BindProperty]
         public TrabajoRecepcional TrabajoRecepcional { get; set; }
+        [BindProperty]
+        public string TipoDeProyecto { get; set; }
+        [BindProperty]
+        public List<int> IDLGACSeleccionadas { get; set; }
 
 
         public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext)

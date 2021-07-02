@@ -8,5 +8,7 @@ namespace MVVM.Models.ClasesAbstractas
     public abstract class TipoDeProyecto
     {
         public int ID { get; set; }
+
+        public TipoDeProyecto() { }
     }
 }

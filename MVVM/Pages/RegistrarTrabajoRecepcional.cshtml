@@ -3,6 +3,10 @@
 @{ 
     string URL_REGISTRAR_TRABAJO_RECEPCIONAL = "https://" + Request.Host + Request.Path;
     int NUMERO_DE_TECLA_ENTER = 13;
+    string HANDLER_PLADEAFEI = "pladeasfei";
+    string HANDLER_PROYECTO_DE_INVESTIGACION = "proyectosDeInvestigacion";
+    string HANDLER_VINCULACION = "vinculaciones";
+
 }
 
 <h1>Registrar trabajo recepcional</h1>
@@ -77,28 +81,27 @@
     <div id="seleccionarTipoDeProyecto">
         <div class="form-group">
             <label class="form-text">Tipo de proyecto al que pertenece</label>
-            <select id="selectTipoDeProyecto" class="form-control">
+            <select id="selectSeleccionarTipoDeProyecto" class="form-control">
+                <option value="" selected disabled hidden>Seleccione aquí</option>
                 <option value="vinculacion">Vinculación</option>
                 <option value="pladeafei">PLADEAFEI</option>
                 <option value="proyectoDeInvestigacion">Proyecto de investigación</option>
             </select>
         </div>
 
-        <div class="form-group">
-            <label class="form-text">Seleccione el proyecto de investigación</label>
-            <select class="form-control">
-
+        <div class="form-group" id="panelTipodeProyecto">
+            <label class="form-text" id="lblSeleccioneTipoDeProyecto"></label>
+            <select class="form-control" id="selectTipoDeProyecto">
             </select>
+            <input id="inputTipoDeProyectoID" asp-for="TrabajoRecepcional.TipoDeProyecto.ID" hidden />
+            <input id="inputTipoDeProyecto" asp-for="TipoDeProyecto" hidden />
         </div>
 
         <div class="form-group">
-            <label class="form-text">Selecciona una LGAC del proyecto de investigación</label>
-            <select class="form-control">
-                @foreach (var lgac in Model.LGACs)
-                {
-                    <option value="@lgac.ID">@lgac.Nombre</option>
-                }
-            </select>
+            <label class="form-text">Selecciona una o más LGAC</label>
+            @*@Html.DropDownListFor(x => x.MiLGAC.ID, Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() }))*@
+            @*<select multiple="multiple" class="form-control" asp-for="@Model.TrabajoRecepcional.LGACs" asp-items="Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() })"></select>*@
+            @Html.ListBoxFor(m => m.IDLGACSeleccionadas, Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() }), new { @class = "form-control" })
         </div>
 
         <div class="form-group">
@@ -197,7 +200,7 @@
 </div>
 
 @section scripts {
-    <script id="mainScript">
+    <script>
         function desasignarEventoPorDefectoDeTecla(numeroDeTecla) {
             let inputs = document.getElementsByTagName('input');
 
@@ -319,41 +322,159 @@
             }
         }
 
+        function populateSelectTipoDeProyecto(jsonElementos, opcionSeleccionada) {
+            let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
+            selectTipoDeProyecto.innerHTML = '';
+
+            let inputTipoDeProyectoID = document.getElementById('inputTipoDeProyectoID');
+            let inputTipoDeProyecto = document.getElementById('inputTipoDeProyecto');
+            inputTipoDeProyectoID.setAttribute('value', '');
+            inputTipoDeProyecto.setAttribute('value', '');
+
+
+            let elementoOptionDefault = document.createElement('option');
+            elementoOptionDefault.setAttribute('hidden', true);
+            elementoOptionDefault.setAttribute('disabled', true);
+            elementoOptionDefault.setAttribute('selected', true);
+            elementoOptionDefault.appendChild(document.createTextNode('Seleccione aquí'));
+            selectTipoDeProyecto.appendChild(elementoOptionDefault);
+
+            if (opcionSeleccionada === 'pladeafei') {
+                for (const pladeafei of jsonElementos) {
+                    let elementoOpcion = document.createElement('option');
+                    elementoOpcion.value = pladeafei.id;
+                    elementoOpcion.setAttribute('data-tipodeproyecto', opcionSeleccionada);
+                    elementoOpcion.appendChild(document.createTextNode(pladeafei.accion));
+                    selectTipoDeProyecto.appendChild(elementoOpcion);
+                }
+            }
+            else if (opcionSeleccionada === 'proyectoDeInvestigacion') {
+                for (const proyectoDeInvestigacion of jsonElementos) {
+                    let elementoOpcion = document.createElement('option');
+                    elementoOpcion.value = proyectoDeInvestigacion.id;
+                    elementoOpcion.setAttribute('data-tipodeproyecto', opcionSeleccionada);
+                    elementoOpcion.appendChild(document.createTextNode(proyectoDeInvestigacion.nombre));
+                    selectTipoDeProyecto.appendChild(elementoOpcion);
+                }
+            }
+            else if (opcionSeleccionada === 'vinculacion') {
+                for (const vinculacion of jsonElementos) {
+                    let elementoOpcion = document.createElement('option');
+                    elementoOpcion.value = vinculacion.id;
+                    elementoOpcion.setAttribute('data-tipodeproyecto', opcionSeleccionada);
+                    elementoOpcion.appendChild(document.createTextNode(vinculacion.organizacionVinculada));
+                    selectTipoDeProyecto.appendChild(elementoOpcion);
+                }
+            }
+        }
+
+        function asignarSeleccionASelectTipoDeProyecto() {
+            function mostrarErrorTiposDeProyecto(respuesta) {
+                if (response.status === 404) {
+                    //delete all options
+                }
+                else {
+                    console.error('Error, la solicitud de tipo de proyecto fue exitosa pero el estado no está manejado', response);
+                }
+            }
+
+            let selectSeleccionarTipoDeProyecto = document.getElementById('selectSeleccionarTipoDeProyecto');
+            let labelSeleccioneTipoDeProyecto = document.getElementById('lblSeleccioneTipoDeProyecto');
+            let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
+            selectTipoDeProyecto.setAttribute('disabled', true);
+
+
+
+            selectSeleccionarTipoDeProyecto.addEventListener('change', function (event) {
+                let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
+                let handler;
+                selectTipoDeProyecto.removeAttribute('disabled');
+                let opcionSeleccionada = event.target.value;
+                let existioError = false;
+
+                if (opcionSeleccionada === 'pladeafei') {
+                    labelSeleccioneTipoDeProyecto.textContent = 'Seleccione la PLADEAFEI';
+                    handler = '@HANDLER_PLADEAFEI';
+                }
+                else if (opcionSeleccionada === 'proyectoDeInvestigacion') {
+                    labelSeleccioneTipoDeProyecto.textContent = 'Seleccione el proyecto de investigación';
+                    handler = '@HANDLER_PROYECTO_DE_INVESTIGACION';
+                }
+                else if (opcionSeleccionada === 'vinculacion') {
+                    labelSeleccioneTipoDeProyecto.textContent = 'Seleccione la vinculación';
+                    handler = '@HANDLER_VINCULACION';
+                }
+                else {
+                    console.error('Error. Opcion seleccionada es nula o vacia', [opcionSeleccionada, selectSeleccionarTipoDeProyecto]);
+                    existioError = true;
+                }
+
+                if (!existioError) {
+                    url.searchParams.append('handler', handler);
+                    fetch(url)
+                        .then(response => {
+                            if (response.ok) {
+                                response.json().then(data => {
+                                    populateSelectTipoDeProyecto(data, opcionSeleccionada);
+                                }).catch(function (reason) {
+                                    console.error(reason);
+                                });
+                            }
+                            else {
+                                mostrarErrorTiposDeProyecto(response);
+                            }
+
+                        }).catch(error => {
+                            console.error('Error al cargar tipo de proyecto. ' + error.message);
+                        });
+                }
+            });
+        }
+
+        function asignarClicASelectTipoDeProyecto() {
+            let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
+            selectTipoDeProyecto.addEventListener('change', function (event) {
+                let elementoOptionSeleccionado = selectTipoDeProyecto.options[selectTipoDeProyecto.selectedIndex];
+                let idTipoDeProyecto = event.target.value;
+                let tipoDeProyecto = elementoOptionSeleccionado.getAttribute('data-tipodeproyecto');
+
+                let inputTipoDeProyectoID = document.getElementById('inputTipoDeProyectoID');
+                let inputTipoDeProyecto = document.getElementById('inputTipoDeProyecto');
+                inputTipoDeProyectoID.setAttribute('value', idTipoDeProyecto);
+                inputTipoDeProyecto.setAttribute('value', tipoDeProyecto);
+            });
+        }
 
         desasignarEventoPorDefectoDeTecla(@NUMERO_DE_TECLA_ENTER);
-        asignarEnterDeBuscarAlumnos()
+        asignarEnterDeBuscarAlumnos();
         asignarClicDeFilaDeTblAlumnos();
-
-
+        asignarSeleccionASelectTipoDeProyecto();
+        asignarClicASelectTipoDeProyecto();
     </script>
 
     <script id="stepsScript">
 
-        function ocultarNodosHijoDeElemento(elemento) {
-            for (let i = 0; i < elemento.children; i++) {
-                let nodoHijo = elemento[i];
-                nodoHijo.setAttribute('hidden', true);
-            }
-        }
-
         function asignarLogicaDeCambioDePasosAFormulario() {
             let formRegistrarTrabajoRecepcional = document.getElementById('formRegistrarTrabajoRecepcional');
-            ocultarNodosHijoDeElemento(formRegistrarTrabajoRecepcional);
+            for (const nodo of formRegistrarTrabajoRecepcional.children) {
+                nodo.setAttribute('hidden', true);
+            }
 
             let panelIdentificadores = document.getElementById('identificadores');
-            let panelSeleccionarAlumnos = document.getElementById('btnSeleccionarAlumnos');
+            let panelSeleccionarAlumnos = document.getElementById('seleccionarAlumnos');
             let panelSeleccionarTipoDeProyecto = document.getElementById('seleccionarTipoDeProyecto');
             let panelSeleccionarOpcionDeSinodal = document.getElementById('seleccionarOpcionDeSinodal');
             let panelBuscarSinodal = document.getElementById('buscarSinodal');
-            panelIdentificadores.setAttribute('hidden', false);
+            panelIdentificadores.removeAttribute('hidden');
 
             let indicadorDePasoActual1 = document.getElementById('pasoActual1');
             indicadorDePasoActual1.classList.add('bg-primary');
             indicadorDePasoActual1.classList.remove('bg-secondary');
-            let indicadorDePasoActual2 = document.getElementById('pasoActuial2');
-            let indicadorDePasoActual3 = document.getElementById('pasoActuial3');
-            let indicadorDePasoActua4 = document.getElementById('pasoActual4');
-            let indicadorDePasoActua5 = document.getElementById('pasoActuial5');
+
+            let indicadorDePasoActual2 = document.getElementById('pasoActual2');
+            let indicadorDePasoActual3 = document.getElementById('pasoActual3');
+            let indicadorDePasoActual4 = document.getElementById('pasoActual4');
+            let indicadorDePasoActual5 = document.getElementById('pasoActual5');
 
             function marcarIndicadorDePasoActual(indicadorDePasoActual, esPasoActual) {
                 if (esPasoActual) {
@@ -370,7 +491,7 @@
                 let btnSeleccionarAlumnos = document.getElementById('btnSeleccionarAlumnos');
                 btnSeleccionarAlumnos.addEventListener('click', function (event) {
                     panelIdentificadores.setAttribute('hidden', true);
-                    panelSeleccionarAlumnos.setAttribute('hidden', false);
+                    panelSeleccionarAlumnos.removeAttribute('hidden');
                     marcarIndicadorDePasoActual(indicadorDePasoActual1, false);
                     marcarIndicadorDePasoActual(indicadorDePasoActual2, true);
                 });
@@ -380,7 +501,7 @@
                 let btnSeleccionarTipoDeProyecto = document.getElementById('btnSeleccionarTipoDeProyecto');
                 btnSeleccionarTipoDeProyecto.addEventListener('click', function (event) {
                     panelSeleccionarAlumnos.setAttribute('hidden', true);
-                    panelSeleccionarTipoDeProyecto.setAttribute('hidden', false);
+                    panelSeleccionarTipoDeProyecto.removeAttribute('hidden');
                     marcarIndicadorDePasoActual(indicadorDePasoActual2, false);
                     marcarIndicadorDePasoActual(indicadorDePasoActual3, true);
                 });
@@ -390,53 +511,64 @@
                 let btnSeleccionarOpcionDeSinodal = document.getElementById('btnSeleccionarOpcionDeSinodal');
                 btnSeleccionarOpcionDeSinodal.addEventListener('click', function (event) {
                     panelSeleccionarTipoDeProyecto.setAttribute('hidden', true);
-                    panelSeleccionarOpcionDeSinodal.setAttribute('hidden', false);
+                    panelSeleccionarOpcionDeSinodal.removeAttribute('hidden');
                     marcarIndicadorDePasoActual(indicadorDePasoActual3, false);
-                    marcarIndicadorDePasoActual(indicadorDePasoActua4, true);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual4, true);
                 });
             }
 
             function asignarClicABtnBuscarSinodal() {
                 let btnBuscarSinodal = document.getElementById('btnBuscarSinodal');
-                btnBuscarSinodal.addEventListener('clic', function (event) {
+                btnBuscarSinodal.addEventListener('click', function (event) {
                     panelSeleccionarOpcionDeSinodal.setAttribute('hidden', true);
-                    panelBuscarSinodal.setAttribute('hidden', false);
-                    marcarIndicadorDePasoActual(indicadorDePasoActua4, false);
-                    marcarIndicadorDePasoActual(indicadorDePasoActua5, true);
+                    panelBuscarSinodal.removeAttribute('hidden');
+                    marcarIndicadorDePasoActual(indicadorDePasoActual4, false);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual5, true);
                 });
             }
 
             function asignarClicBtnRegresarIdentificadores() {
                 let btnRegresarIdentificadores = document.getElementById('btnRegresarIdentificadores');
+                btnRegresarIdentificadores.addEventListener('click', function () {
+                    panelSeleccionarAlumnos.setAttribute('hidden', true);
+                    panelIdentificadores.removeAttribute('hidden');
 
-                $('#seleccionarAlumnos').hide();
-                $('#identificadores').show();
-                $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-                $('#pasoActual1').addClass('bg-primary').removeClass('bg-secondary');
+                    marcarIndicadorDePasoActual(indicadorDePasoActual2, false);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual1, true);
+                });
             }
 
             function asignarClicABtnRegresarSeleccionarAlumno() {
                 let btnRegresarSeleccionarAlumno = document.getElementById('btnRegresarSeleccionarAlumno');
-                $('#seleccionarTipoDeProyecto').hide();
-                $('#seleccionarAlumnos').show();
-                $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-                $('#pasoActual2').addClass('bg-primary').removeClass('bg-secondary');
+                btnRegresarSeleccionarAlumno.addEventListener('click', function () {
+                    panelSeleccionarTipoDeProyecto.setAttribute('hidden', true);
+                    panelSeleccionarAlumnos.removeAttribute('hidden');
+
+                    marcarIndicadorDePasoActual(indicadorDePasoActual3, false);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual2, true);
+                });
             }
 
             function asignarClicABtnRegresarSeleccionarTipoDeProyecto() {
                 let btnRegresarSeleccionarTipoDeProyecto = document.getElementById('btnRegresarSeleccionarTipoDeProyecto');
-                $('#seleccionarOpcionDeSinodal').hide();
-                $('#seleccionarTipoDeProyecto').show();
-                $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-                $('#pasoActual3').addClass('bg-primary').removeClass('bg-secondary');
+                btnRegresarSeleccionarTipoDeProyecto.addEventListener('click', function () {
+                    panelSeleccionarOpcionDeSinodal.setAttribute('hidden', true);
+                    panelSeleccionarTipoDeProyecto.removeAttribute('hidden');
+
+                    marcarIndicadorDePasoActual(indicadorDePasoActual4, false);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual3, true);
+                });
             }
 
             function asignarClicABtnRegresarSeleccionarOpcionSinodal() {
                 let btnRegresarSeleccionarOpcionSinodal = document.getElementById('btnRegresarSeleccionarOpcionSinodal');
-                $('#buscarSinodal').hide();
-                $('#seleccionarOpcionDeSinodal').show();
-                $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-                $('#pasoActual4').addClass('bg-primary').removeClass('bg-secondary');
+                btnRegresarSeleccionarOpcionSinodal.addEventListener('click', function () {
+                    panelBuscarSinodal.setAttribute('hidden', true);
+                    panelSeleccionarOpcionDeSinodal.removeAttribute('hidden');
+
+                    marcarIndicadorDePasoActual(indicadorDePasoActual5, false);
+                    marcarIndicadorDePasoActual(indicadorDePasoActual4, true);
+                });
             }
 
             asignarClicABtnSeleccionarAlumnos();
@@ -448,62 +580,7 @@
             asignarClicABtnRegresarSeleccionarTipoDeProyecto();
             asignarClicABtnRegresarSeleccionarOpcionSinodal();
         }
-        
-        $('#formRegistrarTrabajoRecepcional').children().hide();
-        $('#identificadores').show();
-        $('#pasoActual1').addClass('bg-primary').removeClass('bg-secondary');
 
-        $("#btnSeleccionarAlumnos").on('click', function (e) {
-            $('#identificadores').hide();
-            $('#seleccionarAlumnos').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual2').addClass('bg-primary').removeClass('bg-secondary');
-        });
-
-        $("#btnSeleccionarTipoDeProyecto").on('click', function (e) {
-            $('#seleccionarAlumnos').hide();
-            $('#seleccionarTipoDeProyecto').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual3').addClass('bg-primary').removeClass('bg-secondary');
-        });
-
-        $("#btnSeleccionarOpcionDeSinodal").on('click', function (e) {
-            $('#seleccionarTipoDeProyecto').hide();
-            $('#seleccionarOpcionDeSinodal').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual4').addClass('bg-primary').removeClass('bg-secondary');
-        });
-
-        $("#btnBuscarSinodal").on('click', function (e) {
-            $('#seleccionarOpcionDeSinodal').hide();
-            $('#buscarSinodal').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual5').addClass('bg-primary').removeClass('bg-secondary');
-        }); 
-
-        $("#btnRegresarIdentificadores").on('click', function (e) {
-            $('#seleccionarAlumnos').hide();
-            $('#identificadores').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual1').addClass('bg-primary').removeClass('bg-secondary');
-        });
-        $("#btnRegresarSeleccionarAlumno").on('click', function (e) {
-            $('#seleccionarTipoDeProyecto').hide();
-            $('#seleccionarAlumnos').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual2').addClass('bg-primary').removeClass('bg-secondary');
-        });
-        $("#btnRegresarSeleccionarTipoDeProyecto").on('click', function (e) {
-            $('#seleccionarOpcionDeSinodal').hide();
-            $('#seleccionarTipoDeProyecto').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual3').addClass('bg-primary').removeClass('bg-secondary');
-        });
-        $("#btnRegresarSeleccionarOpcionSinodal").on('click', function (e) {
-            $('#buscarSinodal').hide();
-            $('#seleccionarOpcionDeSinodal').show();
-            $('#contenedorDePasoActual').children().addClass('bg-secondary').removeClass('bg-primary');
-            $('#pasoActual4').addClass('bg-primary').removeClass('bg-secondary');
-        });
+        asignarLogicaDeCambioDePasosAFormulario();
     </script>
 }
