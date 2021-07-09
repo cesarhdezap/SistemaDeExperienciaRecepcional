@@ -18,8 +18,8 @@ namespace MVVM.Models
 
     public enum TipoDeSinodal
     {
-        Codirector,
         Director,
+        Codirector,
         Sinodal
     }
 }

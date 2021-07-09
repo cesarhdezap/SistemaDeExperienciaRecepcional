@@ -28,7 +28,6 @@ namespace MVVM.Pages
         [BindProperty]
         public List<int> IDLGACSeleccionadas { get; set; }
 
-
         public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext)
         {
             DbContext = applicationDbContext;
@@ -98,6 +97,13 @@ namespace MVVM.Pages
             var proyectoDeInvestigacion = new ProyectoDeInvestigacion();
             var proyectosDeInvestigacion = proyectoDeInvestigacion.ObtenerTodos(DbContext);
             return new OkObjectResult(proyectosDeInvestigacion);
+        }
+
+        public IActionResult OnGetSinodales()
+        {
+            var sinodal = new SinodalDelTrabajo();
+            var sinodales = sinodal.ObtenerTodos(DbContext);
+            return new OkObjectResult(sinodales);
         }
 
 

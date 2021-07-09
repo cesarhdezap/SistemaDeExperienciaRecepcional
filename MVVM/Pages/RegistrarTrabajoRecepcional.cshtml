@@ -6,10 +6,11 @@
     string HANDLER_PLADEAFEI = "pladeasfei";
     string HANDLER_PROYECTO_DE_INVESTIGACION = "proyectosDeInvestigacion";
     string HANDLER_VINCULACION = "vinculaciones";
+    string HANDLER_SINODALES = "sinodales";
 
 }
 
-<h1>Registrar trabajo recepcional</h1>
+<h1 class="mb-3">Registrar trabajo recepcional</h1>
 
 <form id="formRegistrarTrabajoRecepcional" method="post">
     <div asp-validation-summary="ModelOnly" class="text-danger" />
@@ -99,8 +100,6 @@
 
         <div class="form-group">
             <label class="form-text">Selecciona una o más LGAC</label>
-            @*@Html.DropDownListFor(x => x.MiLGAC.ID, Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() }))*@
-            @*<select multiple="multiple" class="form-control" asp-for="@Model.TrabajoRecepcional.LGACs" asp-items="Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() })"></select>*@
             @Html.ListBoxFor(m => m.IDLGACSeleccionadas, Model.LGACs.Select(l => new SelectListItem { Text = l.Nombre, Value = l.ID.ToString() }), new { @class = "form-control" })
         </div>
 
@@ -118,10 +117,17 @@
 
     <div id="seleccionarOpcionDeSinodal">
         <h2 class="form-text">Seleccione una opción</h2>
-        <div class="form-group text-center p-4">
-            <input class="btn btn-primary pt-4 pb-4 pr-5 pl-5" type="button" value="Registrar nuevo sinodal">
-            <input class="btn btn-primary pt-4 pb-4 pr-5 pl-5" type="button" id="btnBuscarSinodal" value="Buscar sinodal" />
+
+        <div class="form-group text-center p-4 row">
+            <div class="col-sm">
+                <input class="btn btn-primary btn-lg btn-block" type="button" value="Registrar nuevo sinodal">
+            </div>
+            <div class="col-sm">
+                <input class="btn btn-primary btn-lg btn-block" type="button" id="btnBuscarSinodal" value="Buscar sinodal" />
+            </div>
         </div>
+        
+        
         <div class="clearfix">
             <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarTipoDeProyecto" type="button" value="Regresar" />
         </div>
@@ -130,65 +136,82 @@
     <div id="buscarSinodal">
         <h2 class="form-text">Seleccione un sinodal</h2>
         <div class="form-group">
-            <input class="form-control" type="search" placeholder="Buscar" />
+            <input id="searchBuscarSinodal" class="form-control" type="search" placeholder="Buscar" />
 
+            <div class="form-check mt-2 mb-2">
+                <input class="form-check-input" type="checkbox" id="checkboxMostrarSinodales" />
+                <label class="form-check-label" for="checkboxMostrarSinodales">Mostrar sinodales externos</label>
+            </div>
+
+            <h3>Integrantes</h3>
             <div class="table-responsive">
-                <table id="tblSinodales" class="table table-hover">
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Organización</th>
-                        <th>Correo electrónico</th>
-                        <th>Incluido</th>
-                        <th>Tipo</th>
-                    </tr>
-                    @foreach (var integrante in Model.Integrantes)
-                    {
+                <table id="tblIntegrantes" class="table table-hover">
+                    <thead>
                         <tr>
-                            <td class="tdIntegranteID" hidden>@integrante.ID</td>
-                            <td>@integrante.Nombre</td>
-                            <td>N/A</td>
-                            <td>N/A</td>
-                            <td>X</td>
-                            <td>N/A</td>
+                            <th>Nombre</th>
+                            <th>Número de Personal</th>
+                            <th>Tipo de integrante</th>
+                            <th>Incluido</th>
+                            <th>Tipo</th>
                         </tr>
-                    }
-                    @foreach (var sinodal in Model.Sinodales)
-                    {
-                        <tr>
-                            <td class="tdSinodalID" hidden>@sinodal.ID</td>
-                            <td>@sinodal.Nombre</td>
-                            <td>@sinodal.Organizacion</td>
-                            <td>@sinodal.CorreoElectronico</td>
-                            <td>X</td>
-                            <td>N/A</td>
-                        </tr>
-                    }
+                    </thead>
+                    <tbody>
+                        @foreach (var integrante in Model.Integrantes)
+                        {
+                            <tr>
+                                <td class="tdIntegranteID" hidden>@integrante.ID</td>
+                                <td>@integrante.Nombre</td>
+                                <td>@integrante.NumeroDePersonal</td>
+                                <td>@integrante.TipoDeIntegrante.ToString()</td>
+                                <td>No</td>
+                                <td>N/A</td>
+                            </tr>
+                        }
+                    </tbody>
                 </table>
             </div>
 
-            <div class="float-right">
-                <button class="btn btn-danger">Eliminar sinodal</button>
-                <button class="btn btn-success">Añadir sinodal</button>
+            <h3 hidden id="tituloSinodales">Sinodales</h3>
+            <div class="table-responsive">
+                <table hidden id="tblSinodales" class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Correo electrónico</th>
+                            <th>Organización</th>
+                            <th>Télefono</th>
+                            <th>Incluido</th>
+                            <th>Tipo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div class="clearfix">
+                <div class="form-group">
+                    <div class="form-group">
+                        <label class="form-text">Seleccione el tipo de sinodal</label>
+                        <select class="form-control" id="selectTipoDeSinodal" asp-items="Html.GetEnumSelectList<MVVM.Models.TipoDeSinodal>()">
+                            <option value="" selected disabled hidden>Seleccione una opción</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="float-right">
+                    <button class="btn btn-danger" id="btnEliminarSinodal">Eliminar sinodal</button>
+                    <button class="btn btn-success" id="btnAñadirSinodal">Añadir sinodal</button>
+                </div>
             </div>
         </div>
 
-        <div class="form-group">
-            <label class="form-text">Seleccione el tipo de sinodal</label>
-            <select class="form-control">
-                <option selected>Tipo de sinodal</option>
-                <option value="1">Director</option>
-                <option value="2">Codirector</option>
-                <option value="3">Sinodal</option>
-            </select>
+            <div class="clearfix mt-5">
+                <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
+                <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
+            </div>
         </div>
-
-        <div class="clearfix">
-            <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
-            <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
-        </div>
-    </div>
-
-    
 </form>
 
 <div class="d-flex justify-content-center" id="contenedorDePasoActual">
@@ -200,7 +223,7 @@
 </div>
 
 @section scripts {
-    <script>
+    <script defer>
         function desasignarEventoPorDefectoDeTecla(numeroDeTecla) {
             let inputs = document.getElementsByTagName('input');
 
@@ -213,6 +236,28 @@
                     }
                 });
             }
+        }
+
+        async function buscarDatosPorHandler(handler, cadenaDeBusqueda = '') {
+            let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
+            url.searchParams.append('handler', handler);
+
+            if (cadenaDeBusqueda) {
+                url.searchParams.append('cadenaDeBusqueda', cadenaDeBusquedaAlumnos);
+            }
+
+            let resultado;
+
+            try {
+                const response = await fetch(url);
+                // checar si es 404
+                resultado = await response.json();
+            }
+            catch (error) {
+                console.error('Error, hubo un error al solicitar información al servidor.', error);
+                throw error;
+            }
+            return resultado;
         }
 
         function populateAlumnos(jsonAlumnos) {
@@ -281,22 +326,14 @@
             });
         }
 
-        function eliminarClasesDeElementos(elementos, clases) {
-            let index;
-            for (index = 0; index < elementos.length; index++) {
-                let elemento = elementos[index];
-                let indiceDeClases;
-                for (indiceDeClases = 0; indiceDeClases < clases.length; indiceDeClases++) {
-                    let clase = clases[indiceDeClases];
-                    elemento.classList.remove(clase);
-                }
+        function eliminarClasesDeElemento(elemento, clases) {
+            for (let clase of clases) {
+                elemento.classList.remove(clase);
             }
         }
 
         function agregarClasesAElemento(elemento, clases) {
-            let indiceDeClases;
-            for (indiceDeClases = 0; indiceDeClases < clases.length; indiceDeClases++) {
-                let clase = clases[indiceDeClases];
+            for (let clase of clases) {
                 elemento.classList.add(clase);
             }
         }
@@ -316,7 +353,10 @@
 
                     let inputAlumnoID = document.getElementById('inputAlumnoID');
                     inputAlumnoID.setAttribute('value', idAlumno);
-                    eliminarClasesDeElementos(filasTblAlumnos, clasesParaMarcarFilasSeleccionadas);
+                    for (let fila of filasTblAlumnos) {
+                        eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas);
+                    }
+
                     agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas);
                 });
             }
@@ -431,6 +471,8 @@
             });
         }
 
+        
+
         function asignarClicASelectTipoDeProyecto() {
             let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
             selectTipoDeProyecto.addEventListener('change', function (event) {
@@ -445,14 +487,131 @@
             });
         }
 
+        function asignarClicDeFilaATblIntegrantes() {
+            let filasTblIntegrantes = document.querySelectorAll('#tblIntegrantes > tbody > tr');
+            for (let fila of filasTblIntegrantes) {
+                fila.addEventListener('click', clicFilaDeTblIntegrantesOSinodales);
+            }
+        }
+
+        function clicFilaDeTblIntegrantesOSinodales(event) {
+            let fila = event.currentTarget
+            let filaSeleccionada = fila.classList.contains('selected');
+            let filasIntegrantesYSinodales = document.querySelectorAll('#buscarSinodal .table-responsive tbody > tr');
+
+            if (filaSeleccionada) {
+                fila.classList.remove('selected');
+                eliminarClasesDeElementos(filasIntegrantesYSinodales, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+                //reset combobox tipo de sinodal
+                let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
+                let opcionSeleccionada = selectTipoDeSinodal.options[selectTipoDeSinodal.selectedIndex];
+
+
+            }
+            else {
+                filasIntegrantesYSinodales.forEach(function (fila, indice, lista) {
+                    eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+                });
+
+                agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+            }
+        }
+
+        function populateTblSinodales(jsonSinodales) {
+            let tblBodySinodales = document.querySelector('#tblSinodales > tbody');
+            tblBodySinodales.innerHTML = '';
+
+            for (sinodal of jsonSinodales) {
+                let fila = document.createElement('tr');
+
+                let celdaID = document.createElement('td');
+                celdaID.classList.add('tdSinodalID');
+                celdaID.appendChild(document.createTextNode(sinodal.id));
+                celdaID.setAttribute('hidden', true);
+                fila.appendChild(celdaID);
+
+                let celdaNombre = document.createElement('td');
+                celdaNombre.appendChild(document.createTextNode(sinodal.nombre));
+                fila.appendChild(celdaNombre);
+
+                let celdaCorreo = document.createElement('td');
+                celdaCorreo.appendChild(document.createTextNode(sinodal.correoElectronico));
+                fila.appendChild(celdaCorreo);
+
+                let celdaOrganizacion = document.createElement('td');
+                celdaOrganizacion.appendChild(document.createTextNode(sinodal.organizacion));
+                fila.appendChild(celdaOrganizacion);
+
+                let celdaTelefono = document.createElement('td');
+                celdaTelefono.appendChild(document.createTextNode(sinodal.telefono));
+                fila.appendChild(celdaTelefono);
+
+                let celdaIncluido = document.createElement('td');
+                celdaIncluido.appendChild(document.createTextNode('No'));
+                fila.appendChild(celdaIncluido);
+
+                let celdaTipo = document.createElement('td');
+                celdaTipo.appendChild(document.createTextNode('N/A'));
+                fila.appendChild(celdaTipo);
+
+                fila.addEventListener('click', clicFilaDeTblIntegrantesOSinodales);
+
+                tblBodySinodales.appendChild(fila);
+            }
+
+        }
+
+        function populateTblIntegrantes(integrantes) {
+
+        }
+
+        function asignarClicACheckboxMostrarSinodales() {
+            let checkboxMostrarSinodales = document.getElementById('checkboxMostrarSinodales');
+            checkboxMostrarSinodales.addEventListener('change', function (event) {
+                let tblSinodales = document.getElementById('tblSinodales');
+                let tituloSinodales = document.getElementById('tituloSinodales');
+
+                if (checkboxMostrarSinodales.checked) {
+                    tblSinodales.removeAttribute('hidden');
+                    tituloSinodales.removeAttribute('hidden');
+                    buscarDatosPorHandler('@HANDLER_SINODALES')
+                        .then(function (sinodales) {
+                            populateTblSinodales(sinodales);
+                        })
+                        .catch(function (error) {
+                            // mostrar error en pantalla.
+                            // uncheck checkbox
+                        });
+                }
+                else {
+                    tituloSinodales.setAttribute('hidden', true);
+                    tblSinodales.setAttribute('hidden', true);
+                    // eliminar sinodales externos seleccionados!!!!!!!!!!!!!!
+                    // avisar que se eliminaron de la seleccion
+                }
+            });
+        }
+
+        function asignarClicABtnAñadirSinodal() {
+            let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
+            let opcionSeleccionada = selectTipoDeSinodal.options[selectTipoDeSinodal.selectedIndex];
+        }
+
+        function asignarClicABtnEliminarSinodal() {
+
+        }
+
+
         desasignarEventoPorDefectoDeTecla(@NUMERO_DE_TECLA_ENTER);
         asignarEnterDeBuscarAlumnos();
         asignarClicDeFilaDeTblAlumnos();
         asignarSeleccionASelectTipoDeProyecto();
         asignarClicASelectTipoDeProyecto();
+        asignarClicDeFilaATblIntegrantes();
+        asignarClicACheckboxMostrarSinodales();
     </script>
 
-    <script id="stepsScript">
+    <script defer id="scriptAdministrarPasos">
 
         function asignarLogicaDeCambioDePasosAFormulario() {
             let formRegistrarTrabajoRecepcional = document.getElementById('formRegistrarTrabajoRecepcional');
@@ -518,7 +677,7 @@
             }
 
             function asignarClicABtnBuscarSinodal() {
-                let btnBuscarSinodal = document.getElementById('btnBuscarSinodal');
+                btnBuscarSinodal = document.getElementById('btnBuscarSinodal');
                 btnBuscarSinodal.addEventListener('click', function (event) {
                     panelSeleccionarOpcionDeSinodal.setAttribute('hidden', true);
                     panelBuscarSinodal.removeAttribute('hidden');
