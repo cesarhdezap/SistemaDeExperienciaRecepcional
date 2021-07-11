@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MVVM.Models
 {
@@ -13,10 +12,21 @@ namespace MVVM.Models
         public string Matricula { get; set; }
         public string CorreoElectronico { get; set; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="idAlumno"></param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        /// <exception cref="Microsoft.Data.SqlClient.SqlException">Ocurre cuando la base de datos no ha sido 
+        /// conectada u ocurrió un error con SQLServer.</exception>
+        /// <exception cref="InvalidOperationException">
+        /// Ocurre cuando surge un error al inicializar la base de datos después de la aplicación.</exception>
         public Alumno CargarPorId(int idAlumno, ApplicationDbContext context)
         {
-            // Microsoft.Data.SqlClient.SqlException cuando no existe
-            var alumno = context.Alumnos.FirstOrDefault(alumno => alumno.ID == idAlumno);
+            Alumno alumno = new Alumno();
+            alumno = context.Alumnos.FirstOrDefault(alumno => alumno.ID == idAlumno);
+
             return alumno;
         }
 
@@ -25,7 +35,7 @@ namespace MVVM.Models
         /// </summary>
         /// <param name="cadenaDeBusqueda"></param>
         /// <param name="context"></param>
-        /// <returns><see cref="List{Alumno}"/> Con los alumnos encontrados o vacio si no encontro ninguno</returns>
+        /// <returns><see cref="List{Alumno}"/> Con los alumnos encontrados o vacío si no encontro ninguno</returns>
         public List<Alumno> BuscarAlumno(string cadenaDeBusqueda, ApplicationDbContext context)
         {
             List<Alumno> alumnos = new List<Alumno>();

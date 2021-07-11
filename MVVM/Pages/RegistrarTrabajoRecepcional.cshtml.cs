@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using MVVM.Data;
@@ -38,10 +39,19 @@ namespace MVVM.Pages
             LGACs = new List<LGAC>();
         }
 
-        public void OnGet()
+        public IActionResult OnGet()
         {
             var alumno = new Alumno();
-            AlumnosDelMaestro.AddRange(new Alumno[] { alumno.CargarPorId(1, DbContext), alumno.CargarPorId(2, DbContext), alumno.CargarPorId(3, DbContext) });
+            IActionResult resultado;
+            try
+            {
+                AlumnosDelMaestro.AddRange(new Alumno[] { alumno.CargarPorId(1, DbContext), alumno.CargarPorId(2, DbContext), alumno.CargarPorId(3, DbContext) });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                resultado = StatusCode(StatusCodes.Status500InternalServerError);
+            }
 
             var sinodales = new SinodalDelTrabajo();
             var integrantes = new Integrante();
@@ -50,7 +60,8 @@ namespace MVVM.Pages
 
             var lgac = new LGAC();
             LGACs.AddRange(lgac.ObtenerTodos(DbContext));
-            //cachar todas las peticiones y si son null ponerlas empty en el modelo
+            resultado = Page();
+            return resultado;
         }
 
         public IActionResult OnGetAlumnos(string cadenaDeBusqueda)

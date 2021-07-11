@@ -1,6 +1,6 @@
 ﻿@page
 @model MVVM.Pages.RegistrarTrabajoRecepcionalModel
-@{ 
+@{
     string URL_REGISTRAR_TRABAJO_RECEPCIONAL = "https://" + Request.Host + Request.Path;
     int NUMERO_DE_TECLA_ENTER = 13;
     string HANDLER_PLADEAFEI = "pladeasfei";
@@ -126,8 +126,8 @@
                 <input class="btn btn-primary btn-lg btn-block" type="button" id="btnBuscarSinodal" value="Buscar sinodal" />
             </div>
         </div>
-        
-        
+
+
         <div class="clearfix">
             <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarTipoDeProyecto" type="button" value="Regresar" />
         </div>
@@ -163,8 +163,8 @@
                                 <td>@integrante.Nombre</td>
                                 <td>@integrante.NumeroDePersonal</td>
                                 <td>@integrante.TipoDeIntegrante.ToString()</td>
-                                <td>No</td>
-                                <td>N/A</td>
+                                <td class="tdIncluido">No</td>
+                                <td class="tdTipo">N/A</td>
                             </tr>
                         }
                     </tbody>
@@ -181,7 +181,7 @@
                             <th>Organización</th>
                             <th>Télefono</th>
                             <th>Incluido</th>
-                            <th>Tipo</th>
+                            <th >Tipo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -194,24 +194,27 @@
                 <div class="form-group">
                     <div class="form-group">
                         <label class="form-text">Seleccione el tipo de sinodal</label>
-                        <select class="form-control" id="selectTipoDeSinodal" asp-items="Html.GetEnumSelectList<MVVM.Models.TipoDeSinodal>()">
+                        <select class="form-control" id="selectTipoDeSinodal">
                             <option value="" selected disabled hidden>Seleccione una opción</option>
+                            <option value="@MVVM.Models.TipoDeSinodal.Director">@MVVM.Models.TipoDeSinodal.Director</option>
+                            <option value="@MVVM.Models.TipoDeSinodal.Codirector">@MVVM.Models.TipoDeSinodal.Codirector</option>
+                            <option value="@MVVM.Models.TipoDeSinodal.Sinodal">@MVVM.Models.TipoDeSinodal.Sinodal</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="float-right">
-                    <button class="btn btn-danger" id="btnEliminarSinodal">Eliminar sinodal</button>
-                    <button class="btn btn-success" id="btnAñadirSinodal">Añadir sinodal</button>
+                    <input disabled class="btn btn-danger" type="button" id="btnEliminarSinodal" value="Eliminar sinodal"/>
+                    <input disabled class="btn btn-success" type="button" id="btnAñadirSinodal" value="Añadir sinodal"/>
                 </div>
             </div>
         </div>
 
-            <div class="clearfix mt-5">
-                <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
-                <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
-            </div>
+        <div class="clearfix mt-5">
+            <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
+            <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
         </div>
+    </div>
 </form>
 
 <div class="d-flex justify-content-center" id="contenedorDePasoActual">
@@ -471,7 +474,7 @@
             });
         }
 
-        
+
 
         function asignarClicASelectTipoDeProyecto() {
             let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
@@ -496,25 +499,39 @@
 
         function clicFilaDeTblIntegrantesOSinodales(event) {
             let fila = event.currentTarget
-            let filaSeleccionada = fila.classList.contains('selected');
             let filasIntegrantesYSinodales = document.querySelectorAll('#buscarSinodal .table-responsive tbody > tr');
 
-            if (filaSeleccionada) {
-                fila.classList.remove('selected');
-                eliminarClasesDeElementos(filasIntegrantesYSinodales, clasesParaMarcarFilasSeleccionadas.concat('selected'));
-                //reset combobox tipo de sinodal
-                let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
-                let opcionSeleccionada = selectTipoDeSinodal.options[selectTipoDeSinodal.selectedIndex];
+            // Se utiliza ForEach ya que es un tipo de objeto y no un array.
+            filasIntegrantesYSinodales.forEach(function (fila, indice, lista) {
+                eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+            });
 
+            agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+            actualizarInterfazPorSinodalSeleccionado(fila);
 
+        }
+
+        function actualizarInterfazPorSinodalSeleccionado(filaSeleccionada) {
+            let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
+            let btnAñadirSinodal = document.getElementById('btnAñadirSinodal');
+            let btnEliminarSinodal = document.getElementById('btnEliminarSinodal');
+            let tipoDeSinodal = '';
+
+            if (filaSeleccionada.hasAttribute('incluido')) {
+                tipoDeSinodal = filaSeleccionada.getAttribute('tipoDeSinodal');
+                if (!tipoDeSinodal) {
+                    console.error('Error en actualizarInterfazPorSinodal. Valor de atributo no soportado.');
+                }
+
+                btnAñadirSinodal.disabled = true;
+                btnEliminarSinodal.disabled = false;
             }
             else {
-                filasIntegrantesYSinodales.forEach(function (fila, indice, lista) {
-                    eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
-                });
-
-                agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
+                btnAñadirSinodal.disabled = false;
+                btnEliminarSinodal.disabled = true;
             }
+
+            selectTipoDeSinodal.value = tipoDeSinodal;
         }
 
         function populateTblSinodales(jsonSinodales) {
@@ -547,10 +564,12 @@
                 fila.appendChild(celdaTelefono);
 
                 let celdaIncluido = document.createElement('td');
+                celdaIncluido.classList.add('tdIncluido');
                 celdaIncluido.appendChild(document.createTextNode('No'));
                 fila.appendChild(celdaIncluido);
 
                 let celdaTipo = document.createElement('td');
+                celdaTipo.classList.add('tdTipo')
                 celdaTipo.appendChild(document.createTextNode('N/A'));
                 fila.appendChild(celdaTipo);
 
@@ -593,12 +612,57 @@
         }
 
         function asignarClicABtnAñadirSinodal() {
-            let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
-            let opcionSeleccionada = selectTipoDeSinodal.options[selectTipoDeSinodal.selectedIndex];
+            let btnAñadirSinodal = document.getElementById('btnAñadirSinodal');
+            btnAñadirSinodal.addEventListener('click', function (event) {
+                let selectTipoDeSinodal = document.getElementById('selectTipoDeSinodal');
+                let opcionSeleccionada = selectTipoDeSinodal.value;
+                let filaSeleccionada = document.querySelector('#buscarSinodal .table-responsive tbody > tr.selected');
+
+                if (opcionSeleccionada && filaSeleccionada) {
+                    //CHECAR QUE NO HAYA OTRO CON LA OPCION SELECCIONADA!!!!!!!!!!!!!!!!!!!!
+                    filaSeleccionada.setAttribute('incluido', true);
+                    filaSeleccionada.setAttribute('tipoDeSinodal', opcionSeleccionada);
+
+                    for (let celda of filaSeleccionada.children) {
+                        if (celda.classList.contains('tdTipo')) {
+                            celda.innerHTML = '';
+                            celda.appendChild(document.createTextNode(opcionSeleccionada));
+                        }
+                        else if (celda.classList.contains('tdIncluido')) {
+                            celda.innerHTML = '';
+                            celda.appendChild(document.createTextNode('Sí'));
+                        }
+                    }
+                    actualizarInterfazPorSinodalSeleccionado(filaSeleccionada);
+                }
+                else {
+                    // Quitar console error y anunciar al usuario que no ha seleccionado opcion
+                    console.error('Error en asignarClicABtnAñadirSinodal. Valor de selectTipoDeSinodal no soportado.');
+                }
+            });
         }
 
         function asignarClicABtnEliminarSinodal() {
+            let btnEliminarSinodal = document.getElementById('btnEliminarSinodal');
+            btnEliminarSinodal.addEventListener('click', function () {
+                let filaSeleccionada = document.querySelector('#buscarSinodal .table-responsive tbody > tr.selected');
+                if (filaSeleccionada) {
+                    filaSeleccionada.removeAttribute('incluido');
+                    filaSeleccionada.removeAttribute('tipoDeSinodal');
 
+                    for (let celda of filaSeleccionada.children) {
+                        if (celda.classList.contains('tdTipo')) {
+                            celda.innerHTML = '';
+                            celda.appendChild(document.createTextNode('N/A'));
+                        }
+                        else if (celda.classList.contains('tdIncluido')) {
+                            celda.innerHTML = '';
+                            celda.appendChild(document.createTextNode('No'));
+                        }
+                    }
+                    actualizarInterfazPorSinodalSeleccionado(filaSeleccionada);
+                }
+            });
         }
 
 
@@ -609,6 +673,8 @@
         asignarClicASelectTipoDeProyecto();
         asignarClicDeFilaATblIntegrantes();
         asignarClicACheckboxMostrarSinodales();
+        asignarClicABtnAñadirSinodal();
+        asignarClicABtnEliminarSinodal();
     </script>
 
     <script defer id="scriptAdministrarPasos">
