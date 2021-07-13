@@ -227,6 +227,9 @@
     <div class="rounded-circle bg-primary p-3 m-1 d-inline bg-secondary indicadorDePaso" id="pasoActual5"></div>
 </div>
 
+<div id="divMensajeDeError" class="clearfix mt-3">
+</div>
+
 @section scripts {
     <script defer>
         function desasignarEventoPorDefectoDeTecla(numeroDeTecla) {
@@ -273,7 +276,29 @@
         }
 
         function mostrarMensajeEnPantalla(mensaje) {
-            console.error(`mostrarErrorEnPantalla NOT IMPLEMENTED. Mensaje ${mensaje}`);
+            let divMensajeDeError = document.getElementById('divMensajeDeError');
+            let divError = document.createElement('div');
+            divError.classList.add('alert');
+            divError.classList.add('alert-danger');
+            divError.setAttribute('role', 'alert');
+
+            let labelError = document.createElement('label');
+            labelError.textContent = mensaje;
+            divError.appendChild(labelError);
+
+            let buttonDescartar = document.createElement('button');
+            buttonDescartar.classList.add('close');
+            buttonDescartar.setAttribute('type', 'button');
+            buttonDescartar.setAttribute('data-dismiss', 'alert');
+            buttonDescartar.setAttribute('aria-label', 'Close');
+
+            let span = document.createElement('span');
+            span.setAttribute('aria-hidden', true);
+            span.innerHTML = '&times;';
+            buttonDescartar.appendChild(span);
+            divError.appendChild(buttonDescartar);
+
+            divMensajeDeError.appendChild(divError);
         }
 
         function populateAlumnos(jsonAlumnos) {
