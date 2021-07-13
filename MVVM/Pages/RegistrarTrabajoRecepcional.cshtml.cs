@@ -110,14 +110,49 @@ namespace MVVM.Pages
             return new OkObjectResult(proyectosDeInvestigacion);
         }
 
-        public IActionResult OnGetSinodales()
+        public IActionResult OnGetSinodales(string cadenaDeBusqueda)
         {
-            var sinodal = new SinodalDelTrabajo();
-            var sinodales = sinodal.ObtenerTodos(DbContext);
-            return new OkObjectResult(sinodales);
+            SinodalDelTrabajo sinodal = new SinodalDelTrabajo();
+            if (!string.IsNullOrEmpty(cadenaDeBusqueda))
+            {
+                var sinodales = sinodal.BuscarSinodales(cadenaDeBusqueda, DbContext);
+                if (sinodales.Count > 0)
+                {
+                    return new OkObjectResult(sinodales);
+                }
+                else
+                {
+                    return NotFound("No se encontro la cadena " + cadenaDeBusqueda);
+                }
+            }
+            else
+            {
+                var sinodales = sinodal.ObtenerTodos(DbContext);
+                return new OkObjectResult(sinodales);
+            }
         }
 
-
+        public IActionResult OnGetIntegrantes(string cadenaDeBusqueda)
+        {
+            Integrante integrante = new Integrante();
+            if (!string.IsNullOrEmpty(cadenaDeBusqueda))
+            {
+                var integrantes = integrante.BuscarIntegrantes(cadenaDeBusqueda, DbContext);
+                if (integrantes.Count > 0)
+                {
+                    return new OkObjectResult(integrantes);
+                }
+                else
+                {
+                    return NotFound("No se encontro la cadena " + cadenaDeBusqueda);
+                }
+            }
+            else
+            {
+                var integrantes = integrante.ObtenerTodos(DbContext);
+                return new OkObjectResult(integrantes);
+            }
+        }
 
 
         public void OnPost()

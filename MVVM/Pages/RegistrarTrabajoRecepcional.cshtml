@@ -1,13 +1,15 @@
 ﻿@page
 @model MVVM.Pages.RegistrarTrabajoRecepcionalModel
 @{
+    ViewData["Title"] = "Registrar trabajo recepcional";
     string URL_REGISTRAR_TRABAJO_RECEPCIONAL = "https://" + Request.Host + Request.Path;
     int NUMERO_DE_TECLA_ENTER = 13;
     string HANDLER_PLADEAFEI = "pladeasfei";
     string HANDLER_PROYECTO_DE_INVESTIGACION = "proyectosDeInvestigacion";
     string HANDLER_VINCULACION = "vinculaciones";
     string HANDLER_SINODALES = "sinodales";
-
+    string HANDLER_ALUMNOS = "alumnos";
+    string HANDLER_INTEGRANTES = "integrantes";
 }
 
 <h1 class="mb-3">Registrar trabajo recepcional</h1>
@@ -23,7 +25,7 @@
                 <span asp-validation-for="TrabajoRecepcional.Nombre" class="text-danger" />
             </div>
 
-            <div class="form-group text-center">
+            <div class="form-group">
                 <label class="form-text">Modalidad</label>
                 <select class="form-control" asp-for="@Model.TrabajoRecepcional.Modalidad" asp-items="Html.GetEnumSelectList<Modalidades>()">
                     <option selected="selected" value="">Seleccione una opción</option>
@@ -119,10 +121,10 @@
         <h2 class="form-text">Seleccione una opción</h2>
 
         <div class="form-group text-center p-4 row">
-            <div class="col-sm">
+            <div class="col-sm mb-5 mt-5">
                 <input class="btn btn-primary btn-lg btn-block" type="button" value="Registrar nuevo sinodal">
             </div>
-            <div class="col-sm">
+            <div class="col-sm mb-5 mt-5">
                 <input class="btn btn-primary btn-lg btn-block" type="button" id="btnBuscarSinodal" value="Buscar sinodal" />
             </div>
         </div>
@@ -229,10 +231,7 @@
     <script defer>
         function desasignarEventoPorDefectoDeTecla(numeroDeTecla) {
             let inputs = document.getElementsByTagName('input');
-
-            let index;
-            for (index = 0; index < inputs.length; index++) {
-                let input = inputs[index];
+            for (let input of inputs) {
                 input.addEventListener('keydown', function (event) {
                     if (event.which === numeroDeTecla) {
                         event.preventDefault();
@@ -241,26 +240,40 @@
             }
         }
 
+        // Se regresa el error para identificarlo en donde se llame la funcion y registrar un mensaje personalizado en pantalla
+        // sin hacer un log a la consola.
+        // No se encontro una forma de que la consola del navegador no haga log de las peticiones sin status 200.
         async function buscarDatosPorHandler(handler, cadenaDeBusqueda = '') {
             let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
             url.searchParams.append('handler', handler);
 
             if (cadenaDeBusqueda) {
-                url.searchParams.append('cadenaDeBusqueda', cadenaDeBusquedaAlumnos);
+                url.searchParams.append('cadenaDeBusqueda', cadenaDeBusqueda);
             }
 
             let resultado;
 
             try {
                 const response = await fetch(url);
-                // checar si es 404
-                resultado = await response.json();
+                if (response.ok) {
+                    resultado = await response.json();
+                }
+                else if (response.status == @((Int16)System.Net.HttpStatusCode.NotFound)) {
+                    resultado = '';
+                }
+                else {
+                    throw new Error(`Error en buscarDatosPorHandler. Respuesta del servidor ${response.status} no soportada.`);
+                }
             }
             catch (error) {
-                console.error('Error, hubo un error al solicitar información al servidor.', error);
+                console.error('Error, hubo un error al solicitar información al servidor: ', error);
                 throw error;
             }
             return resultado;
+        }
+
+        function mostrarMensajeEnPantalla(mensaje) {
+            console.error(`mostrarErrorEnPantalla NOT IMPLEMENTED. Mensaje ${mensaje}`);
         }
 
         function populateAlumnos(jsonAlumnos) {
@@ -296,35 +309,26 @@
 
         function asignarEnterDeBuscarAlumnos() {
             let searchBuscarAlumnos = document.getElementById('searchBuscarAlumnos');
-            searchBuscarAlumnos.addEventListener('keydown', function (event) {
+            searchBuscarAlumnos.addEventListener('keydown', (event) => {
                 if (event.which === @NUMERO_DE_TECLA_ENTER) {
                     let cadenaDeBusquedaAlumnos = document.getElementById('searchBuscarAlumnos').value;
-                    let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
-                    url.searchParams.append('handler', 'alumnos');
-                    url.searchParams.append('cadenaDeBusqueda', cadenaDeBusquedaAlumnos);
 
                     let inputAlumnoID = document.getElementById('inputAlumnoID');
                     inputAlumnoID.setAttribute('value', 0);
 
-                    fetch(url)
-                        .then(response => {
-                            if (response.ok) {
-                                response.json().then(data => {
-                                    populateAlumnos(data);
-                                });
+                    buscarDatosPorHandler('@HANDLER_ALUMNOS', cadenaDeBusquedaAlumnos)
+                        .then((alumnos) => {
+                            if (alumnos) {
+                                populateAlumnos(alumnos);
                             }
-                            else if (response.status === 404) {
+                            else {
                                 let tblAlumnosBody = document.querySelector('#tblAlumnos > tbody');
                                 tblAlumnosBody.innerHTML = '';
                             }
-                            else {
-                                console.error('Error, la solicitud de alumnos fue exitosa pero el estado no está manejado', response);
-                            }
-
-                        }).catch(error => {
-                            console.error('Error al cargar alumnos. ' + error.message);
-                        }
-                    );
+                        })
+                        .catch(() => {
+                            mostrarMensajeEnPantalla('Error al cargar alumnos.');
+                        });
                 }
             });
         }
@@ -345,11 +349,9 @@
 
         function asignarClicDeFilaDeTblAlumnos() {
             let filasTblAlumnos = document.querySelector('#tblAlumnos > tbody').rows;
-            let index;
-            for (index = 0; index < filasTblAlumnos.length; index++) {
 
-                let fila = filasTblAlumnos[index];
-                fila.addEventListener('click', function (event) {
+            for (let filaActual of filasTblAlumnos) {
+                filaActual.addEventListener('click', function (event) {
                     let target = event.currentTarget;
                     let idAlumno = target.querySelector('.tdAlumnoID').textContent;
 
@@ -360,7 +362,7 @@
                         eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas);
                     }
 
-                    agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas);
+                    agregarClasesAElemento(filaActual, clasesParaMarcarFilasSeleccionadas);
                 });
             }
         }
@@ -412,21 +414,10 @@
         }
 
         function asignarSeleccionASelectTipoDeProyecto() {
-            function mostrarErrorTiposDeProyecto(respuesta) {
-                if (response.status === 404) {
-                    //delete all options
-                }
-                else {
-                    console.error('Error, la solicitud de tipo de proyecto fue exitosa pero el estado no está manejado', response);
-                }
-            }
-
             let selectSeleccionarTipoDeProyecto = document.getElementById('selectSeleccionarTipoDeProyecto');
             let labelSeleccioneTipoDeProyecto = document.getElementById('lblSeleccioneTipoDeProyecto');
             let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
             selectTipoDeProyecto.setAttribute('disabled', true);
-
-
 
             selectSeleccionarTipoDeProyecto.addEventListener('change', function (event) {
                 let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
@@ -453,32 +444,25 @@
                 }
 
                 if (!existioError) {
-                    url.searchParams.append('handler', handler);
-                    fetch(url)
-                        .then(response => {
-                            if (response.ok) {
-                                response.json().then(data => {
-                                    populateSelectTipoDeProyecto(data, opcionSeleccionada);
-                                }).catch(function (reason) {
-                                    console.error(reason);
-                                });
+                    buscarDatosPorHandler(handler)
+                        .then((tipoDeProyecto) => {
+                            if (tipoDeProyecto) {
+                                populateSelectTipoDeProyecto(tipoDeProyecto, opcionSeleccionada);
                             }
                             else {
-                                mostrarErrorTiposDeProyecto(response);
+                                mostrarMensajeEnPantalla('Error. Ningun tipo de proyecto encontrado.');
                             }
-
-                        }).catch(error => {
-                            console.error('Error al cargar tipo de proyecto. ' + error.message);
+                        })
+                        .catch(() => {
+                            mostrarMensajeEnPantalla('Error al cargar los tipos de proyecto.');
                         });
                 }
             });
         }
 
-
-
         function asignarClicASelectTipoDeProyecto() {
             let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
-            selectTipoDeProyecto.addEventListener('change', function (event) {
+            selectTipoDeProyecto.addEventListener('change', (event) => {
                 let elementoOptionSeleccionado = selectTipoDeProyecto.options[selectTipoDeProyecto.selectedIndex];
                 let idTipoDeProyecto = event.target.value;
                 let tipoDeProyecto = elementoOptionSeleccionado.getAttribute('data-tipodeproyecto');
@@ -508,7 +492,6 @@
 
             agregarClasesAElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
             actualizarInterfazPorSinodalSeleccionado(fila);
-
         }
 
         function actualizarInterfazPorSinodalSeleccionado(filaSeleccionada) {
@@ -581,7 +564,50 @@
         }
 
         function populateTblIntegrantes(integrantes) {
+            let tblBodyIntegrantes = document.querySelector('#tblIntegrantes > tbody');
+            tblBodyIntegrantes.innerHTML = '';
+            for (integrante of integrantes) {
+                let fila = document.createElement('tr');
 
+                let celdaID = document.createElement('td');
+                celdaID.classList.add('tdIntegranteID');
+                celdaID.appendChild(document.createTextNode(integrante.id));
+                celdaID.setAttribute('hidden', true);
+                fila.appendChild(celdaID);
+
+                let celdaNombre = document.createElement('td');
+                celdaNombre.appendChild(document.createTextNode(integrante.nombre));
+                fila.appendChild(celdaNombre);
+
+                let celdaNumeroDePersonal = document.createElement('td');
+                celdaNumeroDePersonal.appendChild(document.createTextNode(integrante.numeroDePersonal));
+                fila.appendChild(celdaNumeroDePersonal);
+
+                let celdaTipoDeIntegrante = document.createElement('td');
+                let tipoDeIntegrante = '';
+                if (integrante.tipoDeIntegrante === @((int)MVVM.Models.TipoDeIntegrante.Integrante)) {
+                    tipoDeIntegrante = '@(MVVM.Models.TipoDeIntegrante.Integrante)';
+                }
+                else if (integrante.tipoDeIntegrante === @((int)MVVM.Models.TipoDeIntegrante.Colaborador)) {
+                    tipoDeIntegrante = '@(MVVM.Models.TipoDeIntegrante.Colaborador)';
+                }
+                celdaTipoDeIntegrante.appendChild(document.createTextNode(tipoDeIntegrante));
+                fila.appendChild(celdaTipoDeIntegrante);
+
+                let celdaIncluido = document.createElement('td');
+                celdaIncluido.classList.add('tdIncluido');
+                celdaIncluido.appendChild(document.createTextNode('No'));
+                fila.appendChild(celdaIncluido);
+
+                let celdaTipo = document.createElement('td');
+                celdaTipo.classList.add('tdTipo')
+                celdaTipo.appendChild(document.createTextNode('N/A'));
+                fila.appendChild(celdaTipo);
+
+                fila.addEventListener('click', clicFilaDeTblIntegrantesOSinodales);
+
+                tblBodyIntegrantes.appendChild(fila);
+            }
         }
 
         function asignarClicACheckboxMostrarSinodales() {
@@ -597,18 +623,26 @@
                         .then(function (sinodales) {
                             populateTblSinodales(sinodales);
                         })
-                        .catch(function (error) {
-                            // mostrar error en pantalla.
-                            // uncheck checkbox
+                        .catch(() => {
+                            mostrarMensajeEnPantalla('Error al buscar sinodales.');
+                            checkboxMostrarSinodales.checked = false;
                         });
                 }
                 else {
                     tituloSinodales.setAttribute('hidden', true);
                     tblSinodales.setAttribute('hidden', true);
-                    // eliminar sinodales externos seleccionados!!!!!!!!!!!!!!
-                    // avisar que se eliminaron de la seleccion
+                    let tblBodySinodales = document.querySelector('#tblSinodales > tbody');
+                    tblBodySinodales.innerHTML = '';
+                    mostrarMensajeEnPantalla('Se deseleccionaron los sinodales externos seleccionados.');
                 }
             });
+        }
+
+        function existeTipoDeSinodalEnTabla(tipoDeSinodal) {
+            let queryParaEncontrarFilaConTipoDeSinodal = `#buscarSinodal .table-responsive tbody > tr[tipodesinodal=${tipoDeSinodal}]`;
+            let fila = document.querySelectorAll(queryParaEncontrarFilaConTipoDeSinodal);
+            let resultado = fila.length > 0;
+            return resultado;
         }
 
         function asignarClicABtnAñadirSinodal() {
@@ -619,25 +653,28 @@
                 let filaSeleccionada = document.querySelector('#buscarSinodal .table-responsive tbody > tr.selected');
 
                 if (opcionSeleccionada && filaSeleccionada) {
-                    //CHECAR QUE NO HAYA OTRO CON LA OPCION SELECCIONADA!!!!!!!!!!!!!!!!!!!!
-                    filaSeleccionada.setAttribute('incluido', true);
-                    filaSeleccionada.setAttribute('tipoDeSinodal', opcionSeleccionada);
-
-                    for (let celda of filaSeleccionada.children) {
-                        if (celda.classList.contains('tdTipo')) {
-                            celda.innerHTML = '';
-                            celda.appendChild(document.createTextNode(opcionSeleccionada));
-                        }
-                        else if (celda.classList.contains('tdIncluido')) {
-                            celda.innerHTML = '';
-                            celda.appendChild(document.createTextNode('Sí'));
-                        }
+                    if (existeTipoDeSinodalEnTabla(opcionSeleccionada)) {
+                        mostrarMensajeEnPantalla(`Ya has seleccionado un ${opcionSeleccionada}.`);
                     }
-                    actualizarInterfazPorSinodalSeleccionado(filaSeleccionada);
+                    else {
+                        filaSeleccionada.setAttribute('incluido', true);
+                        filaSeleccionada.setAttribute('tipoDeSinodal', opcionSeleccionada);
+
+                        for (let celda of filaSeleccionada.children) {
+                            if (celda.classList.contains('tdTipo')) {
+                                celda.innerHTML = '';
+                                celda.appendChild(document.createTextNode(opcionSeleccionada));
+                            }
+                            else if (celda.classList.contains('tdIncluido')) {
+                                celda.innerHTML = '';
+                                celda.appendChild(document.createTextNode('Sí'));
+                            }
+                        }
+                        actualizarInterfazPorSinodalSeleccionado(filaSeleccionada);
+                    }
                 }
                 else {
-                    // Quitar console error y anunciar al usuario que no ha seleccionado opcion
-                    console.error('Error en asignarClicABtnAñadirSinodal. Valor de selectTipoDeSinodal no soportado.');
+                    mostrarMensajeEnPantalla('Se debe seleccionar un tipo de sinodal y un fila en la tabla.');
                 }
             });
         }
@@ -666,6 +703,86 @@
         }
 
 
+        function asignarEnterDeBuscarSinodales() {
+            let searchBuscarSinodal = document.getElementById('searchBuscarSinodal');
+
+            function reemplazarIntegrantes(filasDeIntegrantes) {
+                let tblBodyIntegrantes = document.querySelector('#tblIntegrantes > tbody');
+
+                for (let filaIntegrante of filasDeIntegrantes) {
+                    let filaIntegranteReemplazada = false;
+                    for (let fila of tblBodyIntegrantes.rows) {
+                        let idFilaIntegrante = filaIntegrante.querySelector('.tdIntegranteID').textContent;
+                        let idFila = fila.querySelector('.tdIntegranteID').textContent;
+                        if (idFilaIntegrante === idFila) {
+                            filaIntegrante.removeAttribute('hidden');
+                            tblBodyIntegrantes.replaceChild(filaIntegrante, fila);
+                            filaIntegranteReemplazada = true;
+                            break;
+                        }
+                    }
+                    if (!filaIntegranteReemplazada) {
+                        filaIntegrante.setAttribute('hidden', true);
+                        tblBodyIntegrantes.appendChild(filaIntegrante);
+                    }
+                }
+            }
+
+            function reemplazarSinodales(filasDeSinodales) {
+                let tblBodySinodales = document.querySelector('#tblSinodales > tbody');
+
+                for (let filaSinodal of filasDeSinodales) {
+                    let filaIntegranteReemplazada = false;
+                    for (let fila of tblBodySinodales.rows) {
+                        let idFilaSinodal = filaSinodal.querySelector('.tdSinodalID').textContent;
+                        let idFila = fila.querySelector('.tdSinodalID').textContent;
+                        if (idFilaSinodal === idFila) {
+                            filaSinodal.removeAttribute('hidden');
+                            tblBodySinodales.replaceChild(filaSinodal, fila);
+                            filaIntegranteReemplazada = true;
+                            break;
+                        }
+                    }
+                    if (!filaIntegranteReemplazada) {
+                        filaSinodal.setAttribute('hidden', true);
+                        tblBodySinodales.appendChild(filaSinodal);
+                    }
+                }
+            }
+
+            searchBuscarSinodal.addEventListener('keydown', (event) => {
+                if (event.which === @NUMERO_DE_TECLA_ENTER) {
+                    let integrantesSeleccionados = document.querySelectorAll('#tblIntegrantes > tbody > tr[incluido]');
+                    let cadenaDeBusquedaSinodales = searchBuscarSinodal.value;
+
+                    buscarDatosPorHandler('@HANDLER_INTEGRANTES', cadenaDeBusquedaSinodales)
+                        .then((integrantes) => {
+                            populateTblIntegrantes(integrantes);
+                            reemplazarIntegrantes(integrantesSeleccionados);
+                        })
+                        .catch(error => {
+                            mostrarMensajeEnPantalla('Error al recuperar los integrantes. ');
+                            console.error(error);
+                        });
+
+                    let checkboxMostrarSinodales = document.getElementById('checkboxMostrarSinodales');
+                    if (checkboxMostrarSinodales.checked) {
+                        let sinodalesSeleccionados = document.querySelectorAll('#tblSinodales > tbody > tr[incluido]');
+                        buscarDatosPorHandler('@HANDLER_SINODALES', cadenaDeBusquedaSinodales)
+                            .then((sinodales) => {
+                                populateTblSinodales(sinodales);
+                                reemplazarSinodales(sinodalesSeleccionados);
+                            })
+                            .catch(error => {
+                                mostrarMensajeEnPantalla('Error al recuperar los sinodales externos.');
+                                console.error(error);
+                            });
+                    }
+                }
+            });
+        }
+
+
         desasignarEventoPorDefectoDeTecla(@NUMERO_DE_TECLA_ENTER);
         asignarEnterDeBuscarAlumnos();
         asignarClicDeFilaDeTblAlumnos();
@@ -675,6 +792,7 @@
         asignarClicACheckboxMostrarSinodales();
         asignarClicABtnAñadirSinodal();
         asignarClicABtnEliminarSinodal();
+        asignarEnterDeBuscarSinodales();
     </script>
 
     <script defer id="scriptAdministrarPasos">
