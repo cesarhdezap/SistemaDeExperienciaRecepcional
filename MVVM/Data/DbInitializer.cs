@@ -20,6 +20,34 @@ namespace MVVM.Data
                 context.SaveChanges();
             }
 
+            if (!context.Profesores.Any())
+            {
+                var profesores = new Profesor[]
+                {
+                    new Profesor() {Nombre = "OSCAR MONTIEL CORDOBA", NombreDeUsuario = "omontielc", NumeroDePersonal = "01020304"}
+                };
+                context.Profesores.AddRange(profesores);
+                context.SaveChanges();
+            }
+            
+            if(!context.ExperienciasEducativas.Any())
+            {
+                var experienciasEducativas = new ExperienciaEducativa[]
+                {
+                    new ExperienciaEducativa() {
+                        Nombre = "Proyecto Guiado",
+                        EstadoAbierto = true,
+                        NRC = "38081",
+                        Periodo = "AGO21 - FEB22",
+                        Seccion = "1",
+                        Alumnos = context.Alumnos.ToList(),
+                        Profesor = context.Profesores.FirstOrDefault()
+                    }
+                };
+                context.ExperienciasEducativas.AddRange(experienciasEducativas);
+                context.SaveChanges();
+            }
+
             if (!context.SinodalesDelTrabajo.Any())
             {
                 var sinodales = new SinodalDelTrabajo[]

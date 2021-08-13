@@ -24,5 +24,7 @@ namespace MVVM.Data
         public DbSet<SinodalDelTrabajo> SinodalesDelTrabajo { get; set; }
         public DbSet<TrabajoRecepcional> TrabajosRecepcionales { get; set; }
         public DbSet<Vinculacion> Vinculaciones { get; set; }
+        public DbSet<Profesor> Profesores { get; set; }
+        public DbSet<ExperienciaEducativa> ExperienciasEducativas { get; set; }
     }
 }

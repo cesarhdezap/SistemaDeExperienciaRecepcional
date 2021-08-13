@@ -10,6 +10,7 @@
     string HANDLER_SINODALES = "sinodales";
     string HANDLER_ALUMNOS = "alumnos";
     string HANDLER_INTEGRANTES = "integrantes";
+    int LONGITUD_MINIMA_DE_CADENA = 3;
 }
 
 <h1 class="mb-3">Registrar trabajo recepcional</h1>
@@ -139,6 +140,9 @@
         <h2 class="form-text">Seleccione un sinodal</h2>
         <div class="form-group">
             <input id="searchBuscarSinodal" class="form-control" type="search" placeholder="Buscar" />
+            <input hidden id="inputIDDirector" type="text" asp-for="IDDirector" />
+            <input hidden id="inputIDCodirector" type="text" asp-for="IDCodirector" />
+            <input hidden id="inputIDSinodal" type="text" asp-for="IDSinodal" />
 
             <div class="form-check mt-2 mb-2">
                 <input class="form-check-input" type="checkbox" id="checkboxMostrarSinodales" />
@@ -183,7 +187,7 @@
                             <th>Organización</th>
                             <th>Télefono</th>
                             <th>Incluido</th>
-                            <th >Tipo</th>
+                            <th>Tipo</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -206,15 +210,15 @@
                 </div>
 
                 <div class="float-right">
-                    <input disabled class="btn btn-danger" type="button" id="btnEliminarSinodal" value="Eliminar sinodal"/>
-                    <input disabled class="btn btn-success" type="button" id="btnAñadirSinodal" value="Añadir sinodal"/>
+                    <input disabled class="btn btn-danger" type="button" id="btnEliminarSinodal" value="Eliminar sinodal" />
+                    <input disabled class="btn btn-success" type="button" id="btnAñadirSinodal" value="Añadir sinodal" />
                 </div>
             </div>
         </div>
 
         <div class="clearfix mt-5">
             <input class="btn btn-secondary float-left" id="btnRegresarSeleccionarOpcionSinodal" type="button" value="Regresar" />
-            <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="submit" value="Registrar trabajo recepcional" />
+            <input class="btn btn-success float-right" id="btnRegistrarTrabajoRecepcional" type="button" value="Registrar trabajo recepcional" />
         </div>
     </div>
 </form>
@@ -464,6 +468,7 @@
                     handler = '@HANDLER_VINCULACION';
                 }
                 else {
+                    mostrarMensajeEnPantalla('Error. Opcion seleccionada es nula o vacia');
                     console.error('Error. Opcion seleccionada es nula o vacia', [opcionSeleccionada, selectSeleccionarTipoDeProyecto]);
                     existioError = true;
                 }
@@ -510,7 +515,6 @@
             let fila = event.currentTarget
             let filasIntegrantesYSinodales = document.querySelectorAll('#buscarSinodal .table-responsive tbody > tr');
 
-            // Se utiliza ForEach ya que es un tipo de objeto y no un array.
             filasIntegrantesYSinodales.forEach(function (fila, indice, lista) {
                 eliminarClasesDeElemento(fila, clasesParaMarcarFilasSeleccionadas.concat('selected'));
             });
@@ -807,6 +811,152 @@
             });
         }
 
+        function validarEntradasDeTexto() {
+            let inputNombreDeTrabajoRecepcional = document.getElementById('inputNombreDeTrabajoRecepcional');
+            let inputLineaDeInvestigacion = document.getElementById('inputLineaDeInvestigacion');
+            // pladea fei
+            let valorInputNombre = inputNombreDeTrabajoRecepcional.value;
+            let valorInputLineaInvestigacion = inputLineaDeInvestigacion.value;
+
+            let resultadoDeValidacion = false;
+            if (valorInputNombre && valorInputLineaInvestigacion) {
+                if (valorInputNombre.length >= @LONGITUD_MINIMA_DE_CADENA && valorInputLineaInvestigacion.length >= @LONGITUD_MINIMA_DE_CADENA) {
+                    resultadoDeValidacion = true;
+                }
+            }
+
+            return resultadoDeValidacion;
+        }
+
+        function validarSeleccionDeAlumno() {
+            let inputAlumnoID = document.getElementById('inputAlumnoID');
+            let resultadoValidacion = false;
+
+            if (inputAlumnoID.value > 0) {
+                resultadoValidacion = true;
+            }
+
+            return resultadoValidacion;
+        }
+
+        function validarSeleccionDeTipoDeProyecto() {
+            let selectSeleccionarTipoDeProyecto = document.getElementById('selectSeleccionarTipoDeProyecto');
+            let resultadoValidacion = false;
+
+            if (selectSeleccionarTipoDeProyecto.value) {
+                let selectTipoDeProyecto = document.getElementById('selectTipoDeProyecto');
+                if (selectTipoDeProyecto.value && selectTipoDeProyecto.value != "Seleccione aquí") {
+                    resultadoValidacion = true;
+                }
+            }
+            return resultadoValidacion;
+        }
+
+        function validarSeleccionDeDirector() {
+            let resultadoDeValidacion = false;
+
+            if (document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Director"]')) {
+                resultadoDeValidacion = true;
+            }
+            else {
+                if (document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Director"]')) {
+                    resultadoDeValidacion = true;
+                }
+            }
+            return resultadoDeValidacion;
+        }
+
+        function obtenerLGACSeleccionadas() {
+            let selectLGACs = document.getElementById('IDLGACSeleccionadas');
+
+            let lgacs = [];
+            let options = selectLGACs && selectLGACs.options;
+            let opt;
+
+            for (let i = 0, iLen = options.length; i < iLen; i++) {
+                opt = options[i];
+
+                if (opt.selected) {
+                    lgacs.push(opt.value);
+                }
+            }
+            return lgacs;
+        }
+
+        function asignarIDAInputDeSinodales() {
+            let inputIDDirector = document.getElementById('inputIDDirector');
+            let elementoDirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Director"] > .tdIntegranteID');
+            let idDirector;
+            if (elementoDirector) {
+                idDirector = elementoDirector.textContent;
+            }
+            else {
+                elementoDirector = document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Director"] > .tdIntegranteID');
+                if (elementoDirector) {
+                    idDirector = elementoDirector.textContent;
+                }
+            }
+            let inputIDCodirector = document.getElementById('inputIDCodirector');
+            let elementoCodirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Codirector"] > .tdIntegranteID');
+
+            let idCodirector;
+
+            let inputIDSinodal = document.getElementById('inputIDSinodal');
+            let id Sinodal;
+        }
+
+        function asignarClicARegistrarTrabajoRecepcional() {
+            let btnRegistrarTrabajoRecepcional = document.getElementById('btnRegistrarTrabajoRecepcional');
+            btnRegistrarTrabajoRecepcional.addEventListener('click', () => {
+                let existioUnErrorDeValidacion = false;
+                if (!validarEntradasDeTexto()) {
+                    mostrarMensajeEnPantalla('Debe insertar al menos 3 caracteres en los campos de texto.');
+                    existioUnErrorDeValidacion = true;
+                }
+
+                if (!validarSeleccionDeAlumno()) {
+                    mostrarMensajeEnPantalla('Debe seleccionar un alumno.');
+                    existioUnErrorDeValidacion = true;
+                }
+
+                if (!validarSeleccionDeTipoDeProyecto()) {
+                    mostrarMensajeEnPantalla('Debe seleccionar un tipo de proyecto.');
+                    existioUnErrorDeValidacion = true;
+                }
+
+                if (!validarSeleccionDeDirector()) {
+                    mostrarMensajeEnPantalla('Debe seleccionar al menos un Director para el trabajo recepcional.');
+                    existioUnErrorDeValidacion = true;
+                }
+
+                if (!existioUnErrorDeValidacion) {
+                    asignarIDAInputDeSinodales();
+                    let form = document.getElementById('formRegistrarTrabajoRecepcional');
+                    let formData = new FormData(form);
+
+                    let url = new URL('@URL_REGISTRAR_TRABAJO_RECEPCIONAL');
+
+
+                    fetch(url, {
+                        method: 'post',
+                        body: formData
+                    })
+                        .then(function (response) {
+                            if (response.status !== 200) {
+                                console.log('fetch returned not ok' + response.status);
+                            }
+
+                            response.json().then(function (data) {
+                                console.log('fetch returned ok');
+                                console.log(data);
+                            });
+                        })
+                        .catch(function (err) {
+                            console.log(`error: ${err}`);
+                        });
+                }
+            });
+        }
 
         desasignarEventoPorDefectoDeTecla(@NUMERO_DE_TECLA_ENTER);
         asignarEnterDeBuscarAlumnos();
@@ -818,6 +968,7 @@
         asignarClicABtnAñadirSinodal();
         asignarClicABtnEliminarSinodal();
         asignarEnterDeBuscarSinodales();
+        asignarClicARegistrarTrabajoRecepcional();
     </script>
 
     <script defer id="scriptAdministrarPasos">

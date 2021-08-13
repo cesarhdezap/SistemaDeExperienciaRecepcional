@@ -13,6 +13,7 @@ namespace MVVM.Pages
 {
     public class RegistrarTrabajoRecepcionalModel : PageModel
     {
+        private Profesor Profesor { get; set;}
         private ApplicationDbContext DbContext { get; set; }
         public List<Alumno> AlumnosDelMaestro { get; set; }
         public List<SinodalDelTrabajo> Sinodales { get; set; }
@@ -28,6 +29,13 @@ namespace MVVM.Pages
         public string TipoDeProyecto { get; set; }
         [BindProperty]
         public List<int> IDLGACSeleccionadas { get; set; }
+        [BindProperty]
+        public string IDDirector { get; set; }
+        [BindProperty]
+        public string IDCodirector { get; set; }
+        [BindProperty]
+        public string IDSinodal { get; set; }
+
 
         public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext)
         {
@@ -37,45 +45,67 @@ namespace MVVM.Pages
             Integrantes = new List<Integrante>();
             Sinodales = new List<SinodalDelTrabajo>();
             LGACs = new List<LGAC>();
+            Profesor = new Profesor() { ID = 1 };
         }
 
         public IActionResult OnGet()
         {
-            var alumno = new Alumno();
-            IActionResult resultado;
+            var alumno = new Alumno();            
             try
             {
-                AlumnosDelMaestro.AddRange(new Alumno[] { alumno.CargarPorId(1, DbContext), alumno.CargarPorId(2, DbContext), alumno.CargarPorId(3, DbContext) });
+                AlumnosDelMaestro = alumno.ObtenerAlumnosPorIDDeProfesor(Profesor.ID, DbContext);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                resultado = StatusCode(StatusCodes.Status500InternalServerError);
+                return StatusCode(StatusCodes.Status500InternalServerError, "No se pudieron obtener los alumnos del profesor.");
             }
 
             var sinodales = new SinodalDelTrabajo();
             var integrantes = new Integrante();
-            Integrantes.AddRange(integrantes.ObtenerTodos(DbContext));
-            Sinodales.AddRange(sinodales.ObtenerTodos(DbContext));
+            try
+            {
+                Integrantes.AddRange(integrantes.ObtenerTodos(DbContext));
+                Sinodales.AddRange(sinodales.ObtenerTodos(DbContext));
+            }
+            catch(Microsoft.Data.SqlClient.SqlException ex)
+            {
+                return BadRequest(ex.Message);
+            }
 
             var lgac = new LGAC();
             LGACs.AddRange(lgac.ObtenerTodos(DbContext));
-            resultado = Page();
-            return resultado;
+
+            return Page();
         }
 
         public IActionResult OnGetAlumnos(string cadenaDeBusqueda)
         {
-            //validar paginacion, cuando existan muchos alumnos
-            //validar que get alumnos solo cargue los alumnos del maestro
-            //hacer pruebas de rendimiento para ver si hace falta paginacion
             var alumno = new Alumno();
             if (!string.IsNullOrEmpty(cadenaDeBusqueda))
             {
-                var alumnos = alumno.BuscarAlumno(cadenaDeBusqueda, DbContext);
-                if (alumnos.Count > 0)
+                List<Alumno> alumnosDelProfesor;
+                try
                 {
-                    return new OkObjectResult(alumnos);
+                    alumnosDelProfesor = alumno.ObtenerAlumnosPorIDDeProfesor(Profesor.ID, DbContext);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "No se pudieron obtener los alumnos del profesor.");
+                }
+
+                
+                cadenaDeBusqueda.Trim();
+                List<Alumno> alumnosFiltrados = new List<Alumno>();
+                if (!string.IsNullOrEmpty(cadenaDeBusqueda))
+                {
+                    alumnosFiltrados = alumnosDelProfesor.Where(alumno => alumno.Nombre.Contains(cadenaDeBusqueda) || alumno.Matricula.Contains(cadenaDeBusqueda)).ToList();
+                }
+
+                if (alumnosFiltrados.Count > 0)
+                {
+                    return new OkObjectResult(alumnosFiltrados);
                 }
                 else
                 {
@@ -84,8 +114,17 @@ namespace MVVM.Pages
             }
             else
             {
-                var alumnos = alumno.ObtenerTodos(DbContext);
-                return new OkObjectResult(alumnos);
+                List<Alumno> alumnosDelProfesor = new List<Alumno>();
+                try
+                {
+                    alumnosDelProfesor = alumno.ObtenerAlumnosPorIDDeProfesor(Profesor.ID, DbContext);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "No se pudieron obtener los alumnos del profesor.");
+                }
+                return new OkObjectResult(alumnosDelProfesor);
             }
         }
 

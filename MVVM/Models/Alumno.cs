@@ -1,4 +1,5 @@
-﻿using MVVM.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using MVVM.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace MVVM.Models
         public string Nombre { get; set; }
         public string Matricula { get; set; }
         public string CorreoElectronico { get; set; }
+        public ICollection<ExperienciaEducativa> ExperienciasEducativas { get; set; }
 
         /// <summary>
         /// 
@@ -51,6 +53,26 @@ namespace MVVM.Models
         public List<Alumno> ObtenerTodos(ApplicationDbContext context)
         {
             List<Alumno> alumnos = context.Alumnos.ToList();
+            return alumnos;
+        }
+
+        public List<Alumno> ObtenerAlumnosPorIDDeProfesor(int idProfesor, ApplicationDbContext context) {
+            List<Alumno> alumnos = new List<Alumno>();
+            List<ExperienciaEducativa> experienciasEducativasDelProfesor;
+            experienciasEducativasDelProfesor = context.ExperienciasEducativas.Where(ee => ee.Profesor.ID == idProfesor)
+                .Include(ee => ee.Alumnos).ToList();
+            if (experienciasEducativasDelProfesor.Any())
+            {
+                foreach (ExperienciaEducativa experienciaEducativa in experienciasEducativasDelProfesor)
+                {
+                    alumnos = alumnos.Concat(experienciaEducativa.Alumnos).ToList();
+                }
+
+                foreach(Alumno alumno in alumnos)
+                {
+                    alumno.ExperienciasEducativas = null;
+                }
+            }
             return alumnos;
         }
     }
