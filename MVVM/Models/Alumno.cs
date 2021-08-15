@@ -13,6 +13,7 @@ namespace MVVM.Models
         public string Matricula { get; set; }
         public string CorreoElectronico { get; set; }
         public ICollection<ExperienciaEducativa> ExperienciasEducativas { get; set; }
+        public ICollection<TrabajoRecepcional> TrabajosRecepcionales { get; set; }
 
         /// <summary>
         /// 
@@ -23,7 +24,8 @@ namespace MVVM.Models
         /// <exception cref="Microsoft.Data.SqlClient.SqlException">Ocurre cuando la base de datos no ha sido 
         /// conectada u ocurrió un error con SQLServer.</exception>
         /// <exception cref="InvalidOperationException">
-        /// Ocurre cuando surge un error al inicializar la base de datos después de la aplicación.</exception>
+        /// Ocurre cuando surge un error al inicializar la base de datos después de la aplicación.
+        /// </exception>
         public Alumno CargarPorId(int idAlumno, ApplicationDbContext context)
         {
             Alumno alumno = new Alumno();

@@ -11,6 +11,7 @@
     string HANDLER_ALUMNOS = "alumnos";
     string HANDLER_INTEGRANTES = "integrantes";
     int LONGITUD_MINIMA_DE_CADENA = 3;
+    int MILISEGUNDOS_DE_ESPERA_TRAS_REGISTRAR = 3000;
 }
 
 <h1 class="mb-3">Registrar trabajo recepcional</h1>
@@ -35,7 +36,7 @@
 
             <div class="form-group">
                 <label for="inputArchivoDeAnteproyecto">Subir archivo de anteproyecto</label>
-                <input type="file" asp-for="TrabajoRecepcional.Anteproyecto" class="form-control" id="inputArchivoDeAnteproyecto">
+                <input type="file" asp-for="ArchivoDeAnteproyecto" class="form-control" id="inputArchivoDeAnteproyecto">
                 <span asp-validation-for="TrabajoRecepcional.Anteproyecto" class="text-danger"></span>
             </div>
         </div>
@@ -279,11 +280,16 @@
             return resultado;
         }
 
-        function mostrarMensajeEnPantalla(mensaje) {
+        function mostrarMensajeEnPantalla(mensaje, esMensajeDeError = true) {
             let divMensajeDeError = document.getElementById('divMensajeDeError');
             let divError = document.createElement('div');
             divError.classList.add('alert');
-            divError.classList.add('alert-danger');
+            if (esMensajeDeError) {
+                divError.classList.add('alert-danger');
+            }
+            else {
+                divError.classList.add('alert-success');
+            }
             divError.setAttribute('role', 'alert');
 
             let labelError = document.createElement('label');
@@ -814,7 +820,6 @@
         function validarEntradasDeTexto() {
             let inputNombreDeTrabajoRecepcional = document.getElementById('inputNombreDeTrabajoRecepcional');
             let inputLineaDeInvestigacion = document.getElementById('inputLineaDeInvestigacion');
-            // pladea fei
             let valorInputNombre = inputNombreDeTrabajoRecepcional.value;
             let valorInputLineaInvestigacion = inputLineaDeInvestigacion.value;
 
@@ -885,24 +890,49 @@
 
         function asignarIDAInputDeSinodales() {
             let inputIDDirector = document.getElementById('inputIDDirector');
-            let elementoDirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Director"] > .tdIntegranteID');
-            let idDirector;
-            if (elementoDirector) {
-                idDirector = elementoDirector.textContent;
+            let celdaIDDirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Director"] > .tdIntegranteID');
+            
+            if (celdaIDDirector) {
+                let idDirector = celdaIDDirector.textContent;
+                inputIDDirector.value = idDirector;
             }
             else {
-                elementoDirector = document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Director"] > .tdIntegranteID');
-                if (elementoDirector) {
-                    idDirector = elementoDirector.textContent;
+                celdaIDDirector = document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Director"] > .tdSinodalID');
+                if (celdaIDDirector) {
+                    let idDirector = celdaIDDirector.textContent;
+                    inputIDDirector.value = idDirector;
                 }
             }
-            let inputIDCodirector = document.getElementById('inputIDCodirector');
-            let elementoCodirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Codirector"] > .tdIntegranteID');
 
-            let idCodirector;
+            let inputIDCodirector = document.getElementById('inputIDCodirector');
+            let celdaIDCodirector = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Codirector"] > .tdIntegranteID');
+
+            if (celdaIDCodirector) {
+                let idCodirector = celdaIDCodirector.textContent;
+                inputIDCodirector.value = idCodirector;
+            }
+            else {
+                celdaIDCodirector = document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Codirector"] > .tdSinodalID');
+                if (celdaIDCodirector) {
+                    let idCodirector = celdaIDCodirector.textContent;
+                    inputIDCodirector.value = idCodirector;
+                }
+            }
 
             let inputIDSinodal = document.getElementById('inputIDSinodal');
-            let id Sinodal;
+            let celdaIDSinodal = document.querySelector('#tblIntegrantes > tbody > tr[tipodesinodal="Sinodal"] > .tdIntegranteID');
+
+            if (celdaIDSinodal) {
+                let idSinodal = celdaIDSinodal.textContent;
+                inputIDSinodal.value = idSinodal;
+            }
+            else {
+                celdaIDSinodal = document.querySelector('#tblSinodales > tbody > tr[tipodesinodal="Sinodal"] > .tdSinodalID');
+                if (celdaIDSinodal) {
+                    let idSinodal = celdaIDSinodal.textContent;
+                    inputIDSinodal.value = idSinodal;
+                }
+            }
         }
 
         function asignarClicARegistrarTrabajoRecepcional() {
@@ -943,13 +973,13 @@
                     })
                         .then(function (response) {
                             if (response.status !== 200) {
-                                console.log('fetch returned not ok' + response.status);
+                                console.error(response.body + response.status);
                             }
-
-                            response.json().then(function (data) {
-                                console.log('fetch returned ok');
-                                console.log(data);
-                            });
+                            else {
+                                btnRegistrarTrabajoRecepcional.setAttribute('disabled', true);
+                                mostrarMensajeEnPantalla('Trabajo recepcional registrado exitosamente!', false);
+                                setTimeout(() => { window.location.href = '/Menus/UIMaestro' }, @MILISEGUNDOS_DE_ESPERA_TRAS_REGISTRAR);
+                            }
                         })
                         .catch(function (err) {
                             console.log(`error: ${err}`);

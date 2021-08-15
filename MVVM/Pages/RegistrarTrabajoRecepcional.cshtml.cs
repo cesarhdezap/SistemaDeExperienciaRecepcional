@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.Data.SqlClient;
 using MVVM.Data;
 using MVVM.Models;
 using MVVM.Models.ClasesAbstractas;
@@ -19,10 +22,13 @@ namespace MVVM.Pages
         public List<SinodalDelTrabajo> Sinodales { get; set; }
         public List<Integrante> Integrantes { get; set; }
         public List<LGAC> LGACs { get; set; }
+        private IWebHostEnvironment Environment;
 
 
         [BindProperty]
         public int IDAlumnoSeleccionado { get; set; }
+        [BindProperty]
+        public IFormFile ArchivoDeAnteproyecto { get; set; }
         [BindProperty]
         public TrabajoRecepcional TrabajoRecepcional { get; set; }
         [BindProperty]
@@ -37,9 +43,10 @@ namespace MVVM.Pages
         public string IDSinodal { get; set; }
 
 
-        public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext)
+        public RegistrarTrabajoRecepcionalModel(ApplicationDbContext applicationDbContext, IWebHostEnvironment _environment)
         {
             DbContext = applicationDbContext;
+            Environment = _environment;
 
             AlumnosDelMaestro = new List<Alumno>();
             Integrantes = new List<Integrante>();
@@ -194,19 +201,124 @@ namespace MVVM.Pages
         }
 
 
-        public void OnPost()
+        public IActionResult OnPost()
         {
-            //set fecha de inicio
-            //set estado del proyecto
-            //if(ModelState.IsValid)
-            //{
-            //    GuardadoExitoso = true;
-            //    return Page();
-            //}
-            //else
-            //{
-            //    return RedirectToPage("/Index");
-            //}
+            TrabajoRecepcional.FechaDeInicio = DateTime.Now;
+            TrabajoRecepcional.EstadoDeTrabajoRecepcional = EstadoDeTrabajoRecepcional.EnProceso;
+            if (Enum.TryParse(typeof(Modalidades), TrabajoRecepcional.Modalidad, out var modalidad))
+            {
+                TrabajoRecepcional.Modalidad = modalidad.ToString();
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Error, modalidad no encontrada.");
+            }
+
+            if (!string.IsNullOrEmpty(IDDirector))
+            {
+                TrabajoRecepcional.Direcciones = new List<Direccion>();
+                int.TryParse(IDDirector, out int idDirector);
+                TrabajoRecepcional.AgregarDireccion(idDirector, TipoDeSinodal.Director, DbContext);
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Error, no se encontro un director con la id proporcionada.");
+            }
+
+            if (!string.IsNullOrEmpty(IDCodirector))
+            {
+                TrabajoRecepcional.Direcciones = new List<Direccion>();
+                int.TryParse(IDCodirector, out int idCodirector);
+                TrabajoRecepcional.AgregarDireccion(idCodirector, TipoDeSinodal.Codirector, DbContext);
+            }
+
+            if (!string.IsNullOrEmpty(IDSinodal))
+            {
+                TrabajoRecepcional.Direcciones = new List<Direccion>();
+                int.TryParse(IDSinodal, out int idSinodal);
+                TrabajoRecepcional.AgregarDireccion(idSinodal, TipoDeSinodal.Sinodal, DbContext);
+            }
+
+            Alumno alumno = new Alumno();
+            try
+            {
+                alumno = alumno.CargarPorId(IDAlumnoSeleccionado, DbContext);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error, " + ex.Message);
+            }
+            catch (SqlException ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error, " + ex.Message);
+            }
+
+            TrabajoRecepcional.Alumnos = new List<Alumno>
+            {
+                alumno
+            };
+
+            if (TipoDeProyecto == "proyectoDeInvestigacion")
+            {
+                TipoDeProyecto proyecto = new ProyectoDeInvestigacion();
+                proyecto = proyecto.ObtenerPorID(TrabajoRecepcional.TipoDeProyecto.ID, DbContext);
+                TrabajoRecepcional.TipoDeProyecto = proyecto;
+            }
+            else if (TipoDeProyecto == "vinculacion")
+            {
+                TipoDeProyecto vinculacion = new Vinculacion();
+                vinculacion = vinculacion.ObtenerPorID(TrabajoRecepcional.TipoDeProyecto.ID, DbContext);
+                TrabajoRecepcional.TipoDeProyecto = vinculacion;
+            }
+            else if (TipoDeProyecto == "pladeafei")
+            {
+                TipoDeProyecto pladeafei = new PLADEAFEI();
+                pladeafei = pladeafei.ObtenerPorID(TrabajoRecepcional.TipoDeProyecto.ID, DbContext);
+                TrabajoRecepcional.TipoDeProyecto = pladeafei;
+            }
+            else
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Error, no se proporcino un tipo de proyecto.");
+            }
+
+            TrabajoRecepcional.LGACs = new List<LGAC>();
+            foreach (int idLGAC in IDLGACSeleccionadas)
+            {
+                var lgac = new LGAC();
+                lgac = lgac.ObtenerPorID(idLGAC, DbContext);
+                if (lgac != null)
+                {
+                    TrabajoRecepcional.LGACs.Add(lgac);
+                }
+            }
+
+            if (ArchivoDeAnteproyecto != null)
+            {
+                if (ArchivoDeAnteproyecto.Length > 0)
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        ArchivoDeAnteproyecto.CopyTo(memoryStream);
+                        var fileBytes = memoryStream.ToArray();
+                        TrabajoRecepcional.Anteproyecto = fileBytes;
+                    }
+                }
+
+            }
+
+            try
+            {
+                //TrabajoRecepcional.Guardar(DbContext);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, "Error al guardar el trabajo recepcional: " + ex.Message);
+            }
+
+
+            return new OkObjectResult("Trabajo recepcional guardado.");
         }
     }
 

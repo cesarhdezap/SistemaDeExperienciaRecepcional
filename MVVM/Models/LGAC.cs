@@ -16,5 +16,19 @@ namespace MVVM.Models
             List<LGAC> lgacs = context.LGACs.ToList();
             return lgacs;
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="context"></param>
+        /// <returns>La <see cref="LGAC"/> por id o null si no es encontrada.</returns>
+        public LGAC ObtenerPorID(int id, ApplicationDbContext context)
+        {
+            LGAC lgac = new LGAC();
+            lgac = context.LGACs.Find(id);
+
+            return lgac;
+        }
     }
 }

@@ -90,8 +90,16 @@ namespace MVVM.Data
             {
                 var pladeas = new PLADEAFEI[]
                 {
-                    new PLADEAFEI() {Accion = "3. Contar con programas educativos reconocidos por su calidad", ObjetivoGeneral = "OG: 3", Periodo = "FEB 21 - JUN 21"},
-                    new PLADEAFEI() {Accion = "4. Investigación, innovación y desarrollo tecnológico", ObjetivoGeneral = "OG: 4", Periodo = "FEB 21 - JUN 21"},
+                    new PLADEAFEI() {
+                        Accion = "Programa estratégico 3. Apoyo al estudiante. Acción 7.5 Fortalecer el Laboratorio de Ingeniería de Software", 
+                        ObjetivoGeneral = "7. Promover y fortalecer las  prácticas profesionales y/o de consultoría en los programas de la FEI", 
+                        Periodo = "FEB 21 - JUN 21"
+                    },
+                    new PLADEAFEI() {
+                        Accion = "Programa estratégico 3. Apoyo al estudiante. Acción 7.3 Fomentar la participación de estudiantes en proyectos solicitados a los laboratorios de la FEI", 
+                        ObjetivoGeneral = "7. Promover y fortalecer las prácticas profesionales y/o de consultoría en los programas de la FEI", 
+                        Periodo = "FEB 21 - JUN 21"
+                    },
                 };
                 context.PLADEAFEIs.AddRange(pladeas);
                 context.SaveChanges();
