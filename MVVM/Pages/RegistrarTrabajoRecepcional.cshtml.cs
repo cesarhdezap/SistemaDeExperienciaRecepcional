@@ -310,7 +310,7 @@ namespace MVVM.Pages
 
             try
             {
-                //TrabajoRecepcional.Guardar(DbContext);
+                TrabajoRecepcional.Guardar(DbContext);
             }
             catch (Exception ex)
             {
